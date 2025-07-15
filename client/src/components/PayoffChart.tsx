@@ -22,28 +22,6 @@ export function PayoffChart() {
                         <p className="text-sm">Interactive payoff diagram will be displayed here</p>
                     </div>
                 </div>
-
-                <div className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-blue-900 mb-2">Options Strategy Payoff Chart</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span className="text-slate-600">Max Gain:</span>
-                            <span className="ml-2 font-semibold text-green-600">57000</span>
-                        </div>
-                        <div>
-                            <span className="text-slate-600">Straddle Prem:</span>
-                            <span className="ml-2 font-semibold text-blue-600">1320</span>
-                        </div>
-                        <div>
-                            <span className="text-slate-600">Spot:</span>
-                            <span className="ml-2 font-semibold">56754.70</span>
-                        </div>
-                        <div>
-                            <span className="text-slate-600">ATM IV:</span>
-                            <span className="ml-2 font-semibold">12.3</span>
-                        </div>
-                    </div>
-                </div>
             </CardContent>
         </Card>
     );

@@ -1,15 +1,19 @@
-import { MarketHeader } from "@/components/MarketHeader";
-import { ResizableLayout } from "@/components/ResizableLayout";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
 
-const Index = () => {
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <MarketHeader />
-      <div className="p-4">
-        <ResizableLayout />
-      </div>
-    </div>
-  );
-};
 
-export default Index;
+const App = () => (
+  <TooltipProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/dashboard" element={<Index />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  </TooltipProvider>
+);
+
+export default App;

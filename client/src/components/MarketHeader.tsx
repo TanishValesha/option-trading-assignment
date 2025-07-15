@@ -6,7 +6,7 @@ export function MarketHeader() {
     const timeframes = ['1 Day', '5OD', '-2h', '-30m', '-15m', '-5m', '-1m', '05/01/2025', '15', '30', '1m', '5m', '15m', '30m', '2hr', 'EOD', 'Day'];
 
     return (
-        <div className="bg-white border-b border-slate-200 p-4">
+        <div className="bg-white w-full border-b border-slate-200 p-4">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
