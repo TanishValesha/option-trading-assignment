@@ -1,94 +1,128 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-// import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Settings, Share, Trash2 } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Table, TableHead, TableHeader, TableBody, TableRow, TableCell } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+import clsx from 'clsx';
+import type { PositionRow } from '@/lib/PositionType';
+import type { SetStateAction } from 'react';
 
-export function PositionsPanel() {
+interface PositionParams {
+    positions: PositionRow[];
+    setPositions: React.Dispatch<SetStateAction<PositionRow[]>>;
+}
+
+const LOT_SIZE = 35;
+
+const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+
+
+export function PositionsPanel({ positions, setPositions }: PositionParams) {
+    const totals = positions.reduce(
+        (acc, p) => {
+            acc.delta += p.delta * (p.qty / LOT_SIZE);
+            acc.pnlAbs += p.pnlAbs;
+            return acc;
+        },
+        { delta: 0, pnlAbs: 0 }
+    );
+
+    const deleteRow = (id: string) =>
+        setPositions(prev => prev.filter(p => p.id !== id));
+
+    const clearAll = () => setPositions([]);
+
     return (
         <Card className="h-full">
             <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold">Positions</CardTitle>
-                    <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="h-8">
-                            <Plus className="w-3 h-3 mr-1" />
-                            Add Notes
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-8">
-                            <Settings className="w-3 h-3 mr-1" />
-                            Add Adj
-                        </Button>
-                    </div>
-                </div>
+                <CardTitle className="text-lg font-medium">Positions</CardTitle>
             </CardHeader>
+
             <CardContent className="space-y-4">
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="text-xs">Lots</TableHead>
-                                <TableHead className="text-xs">Qty</TableHead>
-                                <TableHead className="text-xs">Strike</TableHead>
-                                <TableHead className="text-xs">Expiry</TableHead>
-                                <TableHead className="text-xs">Entry</TableHead>
-                                <TableHead className="text-xs">LTP</TableHead>
-                                <TableHead className="text-xs">Delta</TableHead>
-                                <TableHead className="text-xs">P&L</TableHead>
-                                <TableHead className="text-xs">Lots Exit</TableHead>
-                                <TableHead className="text-xs">Actions</TableHead>
+                                {[
+                                    'LotNo', 'Qty', 'Strike', 'Expiry', 'Entry',
+                                    'LTP', 'Delta', 'P&L', 'Actions'
+                                ].map(h => (
+                                    <TableHead key={h} className="text-xs text-center">{h}</TableHead>
+                                ))}
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell colSpan={10} className="text-center text-slate-500 py-8">
-                                    No positions currently open
-                                </TableCell>
-                            </TableRow>
+
+                        <TableBody className='text-center'>
+                            {positions.length ? (
+                                positions.map(p => (
+                                    <TableRow key={p.id}>
+                                        <TableCell>{p.lotNo}</TableCell>
+                                        <TableCell>{p.qty}</TableCell>
+                                        <TableCell>{p.strike} ({p.type === 'call' ? "CALL" : "PUT"})</TableCell>
+                                        <TableCell>{fmtDate(p.expiry)}</TableCell>
+                                        <TableCell>{p.entry.toFixed(2)}</TableCell>
+                                        <TableCell>{p.ltp.toFixed(2)}</TableCell>
+                                        <TableCell>{p.delta.toFixed(2)}</TableCell>
+                                        <TableCell
+                                            className={clsx(
+                                                p.pnlAbs > 0 && 'text-green-600',
+                                                p.pnlAbs < 0 && 'text-red-600'
+                                            )}
+                                        >
+                                            ₹{p.pnlAbs.toFixed(2)} ({p.pnlPct.toFixed(1)}%)
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button
+                                                size="sm"
+                                                variant="destructive"
+                                                className="h-6 px-2"
+                                                onClick={() => deleteRow(p.id)}
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={10} className="text-center py-8 text-slate-500">
+                                        No positions currently open
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </div>
 
                 <div className="border-t pt-4">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex justify-between mb-4">
                         <div>
                             <span className="text-sm text-slate-600">Delta:</span>
-                            <span className="ml-2 font-semibold">0.00</span>
+                            <span className="ml-2 font-semibold">{totals.delta.toFixed(2)}</span>
                         </div>
                         <div>
                             <span className="text-sm text-slate-600">P&L:</span>
-                            <span className="ml-2 font-semibold text-slate-600">₹0.00 (0%)</span>
+                            <span
+                                className={clsx(
+                                    'ml-2 font-semibold',
+                                    totals.pnlAbs > 0 && 'text-green-600',
+                                    totals.pnlAbs < 0 && 'text-red-600'
+                                )}
+                            >
+                                ₹{totals.pnlAbs.toFixed(2)}
+                            </span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-                        <div className="flex items-center gap-2">
-                            <Label htmlFor="multiplier" className="text-sm">Multiplier:</Label>
-                            <Input id="multiplier" type="number" value="1" className="w-16 h-8" />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Label htmlFor="lotsize" className="text-sm">Lot Size:</Label>
-                            <span className="text-sm font-medium">35</span>
-                        </div>
-                        <div className="flex gap-2 ml-auto">
-                            <Button size="sm" className="h-8 bg-blue-600 hover:bg-blue-700">
-                                Add Alert
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-8">
-                                Save
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-8">
-                                <Share className="w-3 h-3 mr-1" />
-                                Share
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-8 text-red-600 hover:text-red-700">
-                                <Trash2 className="w-3 h-3" />
-                                Clear
-                            </Button>
-                        </div>
-                    </div>
+                    <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={clearAll}
+                        disabled={!positions.length}
+                    >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Clear All
+                    </Button>
                 </div>
             </CardContent>
         </Card>

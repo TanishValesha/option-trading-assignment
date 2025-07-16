@@ -1,105 +1,234 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useEffect, useState } from "react";
+import { baseURL } from "@/lib/baseURL";
+import { Loader } from "lucide-react";
+import { Label } from "./ui/label";
+import type { OptionSide } from "@/lib/PositionType";
 
-interface OptionRow {
-    callLTP: number;
-    callIV: number;
-    callOI: number;
-    strike: number;
-    putOI: number;
-    putIV: number;
-    putLTP: number;
+interface OptionParams {
+    date: Date,
+    time: string,
+    onAddPosition: (strike: number,
+        side: OptionSide,
+        type: 'call' | 'put',
+        ltp: number,
+        expiry: string) => void
 }
 
-const optionsData: OptionRow[] = [
-    { callLTP: 1595.6, callIV: 13.9, callOI: 0, strike: 52000, putOI: 0, putIV: 21.8, putLTP: 255.9 },
-    { callLTP: 1251.7, callIV: 12.7, callOI: 0, strike: 56100, putOI: 63.9, putIV: 13.9, putLTP: 279.6 },
-    { callLTP: 1170.3, callIV: 12.8, callOI: 12.6, strike: 56200, putOI: 99.4, putIV: 13.6, putLTP: 306.1 },
-    { callLTP: 1099.0, callIV: 12.6, callOI: 26.4, strike: 56300, putOI: 81.3, putIV: 13.5, putLTP: 333.1 },
-    { callLTP: 1035.0, callIV: 12.5, callOI: 2.7, strike: 56400, putOI: 84.8, putIV: 13.4, putLTP: 361.6 },
-    { callLTP: 969.7, callIV: 12.4, callOI: 42.3, strike: 56500, putOI: 6.4, putIV: 13.2, putLTP: 393.0 },
-    { callLTP: 904.1, callIV: 12.3, callOI: 67.8, strike: 56600, putOI: 1.2, putIV: 13.1, putLTP: 429.9 },
-    { callLTP: 840.9, callIV: 12.3, callOI: 91.7, strike: 56700, putOI: 1.7, putIV: 13.0, putLTP: 463.8 },
-    { callLTP: 786.3, callIV: 12.3, callOI: 87.4, strike: 56800, putOI: 1.5, putIV: 12.9, putLTP: 502.6 },
-    { callLTP: 730.1, callIV: 12.3, callOI: 12.0, strike: 56900, putOI: 1.5, putIV: 12.8, putLTP: 545.9 },
-];
+export interface ChainRow {
+    strike: number;
+    call_ltp: number;
+    put_ltp: number;
+}
 
-export function OptionsChain() {
+export interface SnapshotMeta {
+    dayOpen: number;
+    spot: number;
+    atm_iv: number;
+    fut_price: number;
+}
+
+
+export function OptionsChain({ date, time, onAddPosition }: OptionParams) {
+
+    const [optionsData, setOptionsData] = useState<ChainRow[]>([]);
+    const [expiryDates, setExpiryDates] = useState<[]>([]);
+    const [selectedExpiry, setExpiry] = useState<string>();
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const formatDateForAPI = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+
+    useEffect(() => {
+        const getExpiriesFunction = async () => {
+            setLoading(true);
+            try {
+                const formattedDate = formatDateForAPI(date);
+                const res = await fetch(`${baseURL}/expiry-dates?date=${formattedDate}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                const data = await res.json();
+                if (res.status === 200) {
+                    setExpiryDates(data.data);
+                    setExpiry(data.data[0])
+                } else if (res.status === 500) {
+                    setExpiryDates([]);
+                    setExpiry('');
+                } else {
+                    setExpiry('');
+                    console.error('Unexpected response status:', res.status);
+                }
+
+            } catch (error) {
+                console.log('Error fetching times:', error);
+                setExpiryDates([]);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        getExpiriesFunction();
+
+    }, [date])
+
+    useEffect(() => {
+        const getOptionsFunction = async () => {
+            setLoading(true);
+            try {
+                const formattedDate = formatDateForAPI(date);
+                const res = await fetch(`${baseURL}/option-chains?date=${formattedDate}&time=${time}&expiry=${selectedExpiry}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    cache: 'no-cache'
+                });
+                const data = await res.json();
+                if (res.status === 200) {
+                    setOptionsData(data.chain);
+                } else if (res.status === 500) {
+                    setOptionsData([]);
+                } else {
+                    setOptionsData([]);
+                    console.error('Unexpected response status:', res.status);
+                }
+
+            } catch (error) {
+                console.log('Error fetching times:', error);
+                setOptionsData([]);
+            } finally {
+                setLoading(false);
+            }
+        }
+        if (selectedExpiry) getOptionsFunction();
+    }, [date, time, selectedExpiry]);
+
     return (
         <Card className="h-full">
-            <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold">Options Chain</CardTitle>
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">Expiry: 31 Jul 25</Badge>
-                    </div>
+            <CardHeader className="">
+                <CardTitle className="text-xl text-left mt-1">Option Chain</CardTitle>
+                <div className="flex w-full items-center justify-center gap-3">
+                    {expiryDates.map(exp => {
+                        const isActive = exp === selectedExpiry;
+                        return (
+                            <Button
+                                key={exp}
+                                variant={isActive ? 'default' : 'outline'}
+                                className={`text-sm px-4 py-1 transition
+                      ${isActive ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                onClick={() => setExpiry(exp)}
+                            >
+                                {formatDate(new Date(exp))}
+                            </Button>
+                        );
+                    })}
                 </div>
             </CardHeader>
-            <CardContent>
-                <div className="rounded-lg border bg-muted/20">
+            <CardContent className="h-full overflow-hidden">
+                <div className="rounded-lg border bg-muted/20 h-full overflow-y-auto">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-white z-10">
                             <TableRow className="border-b">
-                                <TableHead className="text-center bg-green-50 text-green-700 font-semibold">Call LTP (Δ)</TableHead>
-                                <TableHead className="text-center bg-green-50 text-green-700">IV</TableHead>
-                                <TableHead className="text-center bg-green-50 text-green-700">OI</TableHead>
-                                <TableHead className="text-center bg-blue-50 text-blue-700">Call Actions</TableHead>
-                                <TableHead className="text-center bg-slate-100 font-bold">Strike</TableHead>
-                                <TableHead className="text-center bg-blue-50 text-blue-700">Put Actions</TableHead>
-                                <TableHead className="text-center bg-red-50 text-red-700">OI</TableHead>
-                                <TableHead className="text-center bg-red-50 text-red-700">IV</TableHead>
-                                <TableHead className="text-center bg-red-50 text-red-700 font-semibold">Put LTP (Δ)</TableHead>
+                                <TableHead className="text-center bg-green-50 text-green-700 font-semibold w-1/5">Call LTP (Δ)</TableHead>
+                                <TableHead className="text-center bg-blue-50 text-blue-700 w-1/5">Call Actions</TableHead>
+                                <TableHead className="text-center bg-slate-100 font-bold w-1/5">Strike</TableHead>
+                                <TableHead className="text-center bg-blue-50 text-blue-700 w-1/5">Put Actions</TableHead>
+                                <TableHead className="text-center bg-red-50 text-red-700 font-semibold w-1/5">Put LTP (Δ)</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
-                            {optionsData.map((row,) => (
-                                <TableRow
-                                    key={row.strike}
-                                    className={`hover:bg-muted/50 transition-colors ${row.strike === 56700 ? 'bg-blue-50/50 border-blue-200' : ''
-                                        }`}
-                                >
-                                    <TableCell className="text-center font-medium text-green-600">
-                                        {row.callLTP.toFixed(1)}
-                                    </TableCell>
-                                    <TableCell className="text-center text-sm">{row.callIV}</TableCell>
-                                    <TableCell className="text-center text-sm">
-                                        {row.callOI > 0 ? row.callOI.toFixed(1) : '0'}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex gap-1 justify-center">
-                                            <Button size="sm" variant="outline" className="h-6 w-8 p-0 bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
-                                                B
-                                            </Button>
-                                            <Button size="sm" variant="outline" className="h-6 w-8 p-0 bg-red-50 hover:bg-red-100 text-red-700 border-red-200">
-                                                S
-                                            </Button>
+                        {loading ? (
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-8">
+                                        <div className="flex justify-center items-center h-full">
+                                            <Loader className="w-6 h-6 animate-spin text-blue-600" />
                                         </div>
-                                    </TableCell>
-                                    <TableCell className="text-center font-bold bg-slate-50">
-                                        {row.strike.toLocaleString()}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex gap-1 justify-center">
-                                            <Button size="sm" variant="outline" className="h-6 w-8 p-0 bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
-                                                B
-                                            </Button>
-                                            <Button size="sm" variant="outline" className="h-6 w-8 p-0 bg-red-50 hover:bg-red-100 text-red-700 border-red-200">
-                                                S
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-center text-sm">
-                                        {row.putOI > 0 ? row.putOI.toFixed(1) : '0'}
-                                    </TableCell>
-                                    <TableCell className="text-center text-sm">{row.putIV}</TableCell>
-                                    <TableCell className="text-center font-medium text-red-600">
-                                        {row.putLTP.toFixed(1)}
                                     </TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
+                            </TableBody>
+                        ) : !optionsData?.length ? (
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-8">
+                                        <div className="flex justify-center items-center h-full">
+                                            <Label className="text-gray-500">No Data Available</Label>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        ) : (
+                            <TableBody>
+                                {optionsData.map((row) => (
+                                    <TableRow
+                                        key={row.strike}
+                                        className={`hover:bg-muted/50 py-4 transition-colors ${row.strike === 56700 ? 'bg-blue-50/50 border-blue-200' : ''
+                                            }`}
+                                    >
+                                        <TableCell className="text-center font-medium text-green-600 w-1/5">
+                                            {row.call_ltp}
+                                        </TableCell>
+                                        <TableCell className="text-center w-1/5">
+                                            <div className="flex gap-1 justify-center">
+                                                <Button onClick={() => {
+                                                    onAddPosition(row.strike, 'BUY', 'call', row.call_ltp, selectedExpiry!);
+
+
+                                                }
+                                                } size="sm" variant="outline" className="h-6 w-8 p-0 bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
+                                                    B
+                                                </Button>
+                                                <Button onClick={() => {
+                                                    onAddPosition(row.strike, 'SELL', 'call', row.call_ltp, selectedExpiry!);
+                                                }
+                                                } size="sm" variant="outline" className="h-6 w-8 p-0 bg-red-50 hover:bg-red-100 text-red-700 border-red-200">
+                                                    S
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-center font-bold bg-slate-50 w-1/5">
+                                            {row.strike.toLocaleString()}
+                                        </TableCell>
+                                        <TableCell className="text-center w-1/5">
+                                            <div className="flex gap-1 justify-center">
+                                                <Button onClick={() => {
+                                                    onAddPosition(row.strike, 'BUY', 'put', row.put_ltp, selectedExpiry!);
+                                                }
+                                                } size="sm" variant="outline" className="h-6 w-8 p-0 bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
+                                                    B
+                                                </Button>
+                                                <Button onClick={() => {
+                                                    onAddPosition(row.strike, 'SELL', 'put', row.put_ltp, selectedExpiry!);
+                                                }
+                                                } size="sm" variant="outline" className="h-6 w-8 p-0 bg-red-50 hover:bg-red-100 text-red-700 border-red-200">
+                                                    S
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-center font-medium text-red-600 w-1/5">
+                                            {row.put_ltp}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        )}
                     </Table>
                 </div>
             </CardContent>
