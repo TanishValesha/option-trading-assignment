@@ -21,7 +21,7 @@ export function ResizableLayout() {
 
                         <ResizableHandle withHandle />
 
-                        <ResizablePanel defaultSize={65} minSize={25}>
+                        <ResizablePanel defaultSize={35} minSize={25}>
                             <PositionsPanel />
                         </ResizablePanel>
                     </ResizablePanelGroup>

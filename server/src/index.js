@@ -1,10 +1,16 @@
 const express = require('express');
 const cors    = require('cors');
-
+const morgan = require('morgan');
 const route = require('./routes/route');
 
 const app = express();
 app.use(cors());
+app.use(morgan('tiny'))
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+  })
+);
 app.use(express.json());
 
 app.get('/api/health-check', (req, res) => {

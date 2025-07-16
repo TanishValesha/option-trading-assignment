@@ -1,7 +1,7 @@
 const { supabase } = require('../../lib/supabase');
 
 exports.getTimes = async (req, res) => {
-    const { date } = req.body;
+    const { date } = req.query;
     if (!date) return res.status(400).json({ error: 'date required' });
 
     const { data, error } = await supabase

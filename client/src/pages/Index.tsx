@@ -3,7 +3,7 @@ import { ResizableLayout } from "@/components/ResizableLayout";
 
 const Index = () => {
     return (
-        <div className="min-h-screen w-screen bg-slate-50 overflow-x-hidden">
+        <div className="min-h-screen w-screen bg-slate-50">
             <MarketHeader />
             <div className="w-full max-w-none">
                 <ResizableLayout />
