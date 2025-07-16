@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { baseURL } from "@/lib/baseURL";
 import { Loader } from "lucide-react";
 import { Label } from "./ui/label";
@@ -14,7 +14,9 @@ interface OptionParams {
         side: OptionSide,
         type: 'call' | 'put',
         ltp: number,
-        expiry: string) => void
+        expiry: string) => void,
+    selectedExpiry: string,
+    setExpiry: Dispatch<SetStateAction<string | undefined>>,
 }
 
 export interface ChainRow {
@@ -31,11 +33,11 @@ export interface SnapshotMeta {
 }
 
 
-export function OptionsChain({ date, time, onAddPosition }: OptionParams) {
+export function OptionsChain({ date, time, onAddPosition, selectedExpiry, setExpiry }: OptionParams) {
 
     const [optionsData, setOptionsData] = useState<ChainRow[]>([]);
     const [expiryDates, setExpiryDates] = useState<[]>([]);
-    const [selectedExpiry, setExpiry] = useState<string>();
+
     const [loading, setLoading] = useState<boolean>(false);
 
     const formatDateForAPI = (date: Date) => {
