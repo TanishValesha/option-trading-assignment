@@ -56,29 +56,29 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
     const options: Highcharts.Options = {
         chart: {
             type: 'area',
-            backgroundColor: '#3b3e47',
+            backgroundColor: '#ffffff', // Light background
         },
         title: {
             text: 'Options Strategy Payoff Chart',
-            style: { color: '#e0e0e0' },
+            style: { color: '#000000' }, // Dark title
         },
         xAxis: {
             title: {
                 text: 'Underlying Price',
-                style: { color: '#c0c0c0' },
+                style: { color: '#333333' }, // Dark label
             },
-            labels: { style: { color: '#a0a0a0' } },
-            lineColor: '#666a70',
-            tickColor: '#666a70',
+            labels: { style: { color: '#555555' } },
+            lineColor: '#cccccc',
+            tickColor: '#cccccc',
             plotLines: [
                 {
                     value: spotPrice,
-                    color: '#778899',
+                    color: '#000000', // Spot price line
                     dashStyle: 'ShortDash',
                     width: 2,
                     label: {
                         text: `Spot Price: ${spotPrice.toFixed(2)}`,
-                        style: { color: '#98c379' },
+                        style: { color: '#000000' },
                     },
                 },
             ],
@@ -86,22 +86,23 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
         yAxis: {
             title: {
                 text: 'Profit / Loss',
-                style: { color: '#c0c0c0' },
+                style: { color: '#333333' },
             },
-            labels: { style: { color: '#a0a0a0' } },
-            gridLineColor: '#4c5059',
+            labels: { style: { color: '#555555' } },
+            gridLineColor: '#e0e0e0',
             plotLines: [
                 {
                     value: 0,
-                    color: '#b0b0b0',
+                    color: '#888888', // Neutral zero line
                     width: 2,
                     zIndex: 4,
                 },
             ],
         },
         tooltip: {
-            backgroundColor: 'rgba(59, 62, 71, 0.85)',
-            style: { color: '#e0e0e0' },
+            backgroundColor: '#ffffff',
+            style: { color: '#000000' },
+            borderColor: '#cccccc',
             pointFormat: 'Price: <b>{point.x:.2f}</b><br/>P&L: <b>{point.y:.2f}</b>',
         },
         series: [
@@ -109,16 +110,17 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
                 type: 'area',
                 name: 'Payoff',
                 data: totalPayoffs,
-                color: '#98c379',
-                negativeColor: '#e06c75',
+                color: '#28a745',         // Green for profit
+                negativeColor: '#dc3545', // Red for loss
                 threshold: 0,
                 marker: { enabled: false },
-                fillOpacity: 0.3,
+                fillOpacity: 0.2,
             },
         ],
         credits: { enabled: false },
         legend: { enabled: false },
     };
+
 
     return <HighchartsReact highcharts={Highcharts} options={options} />;
 };

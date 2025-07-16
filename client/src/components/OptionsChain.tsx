@@ -145,7 +145,7 @@ export function OptionsChain({ date, time, onAddPosition, selectedExpiry, setExp
                 </div>
             </CardHeader>
             <CardContent className="h-full overflow-hidden">
-                <div className="rounded-lg border bg-muted/20 h-full overflow-y-auto">
+                <div className="rounded-lg border bg-muted/20 h-full overflow-y-auto hide-scrollbar">
                     <Table>
                         <TableHeader className="sticky top-0 bg-white z-10">
                             <TableRow className="border-b">

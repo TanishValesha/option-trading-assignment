@@ -23,14 +23,15 @@ export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
                 </div>
             </CardHeader>
             <CardContent>
-                <ChartComponent positions={positions} spotPrice={spotPrice} lotSize={35} />
-                {/* <div className="h-[300px] bg-slate-50 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center">
+                {positions.length != 0 ? (<ChartComponent positions={positions} spotPrice={spotPrice} lotSize={35} />) : (<div className="h-[300px] bg-slate-50 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center">
                     <div className="text-center text-slate-500">
                         <TrendingUp className="w-12 h-12 mx-auto mb-3 text-slate-400" />
                         <p className="text-lg font-medium">Chart Visualization Area</p>
-                        <p className="text-sm">Interactive payoff diagram will be displayed here</p>
+                        <p className="text-sm">Interactive payoff diagram will be displayed here on adding positions</p>
                     </div>
-                </div> */}
+                </div>)}
+
+
             </CardContent>
         </Card>
     );

@@ -44,8 +44,8 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
                         <TableHeader>
                             <TableRow>
                                 {[
-                                    'LotNo', 'Qty', 'Strike', 'Expiry', 'Entry',
-                                    'LTP', 'Delta', 'P&L', 'Actions'
+                                    'Sr.No', 'Qty', 'Strike', 'Expiry', 'Entry',
+                                    'LTP', 'Delta', 'P&L', 'Lots', 'Actions'
                                 ].map(h => (
                                     <TableHead key={h} className="text-xs text-center">{h}</TableHead>
                                 ))}
@@ -71,6 +71,7 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
                                         >
                                             ₹{p.pnlAbs.toFixed(2)} ({p.pnlPct.toFixed(1)}%)
                                         </TableCell>
+                                        <TableCell>{p.qty / 35}</TableCell>
                                         <TableCell>
                                             <Button
                                                 size="sm"
@@ -94,12 +95,9 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
                     </Table>
                 </div>
 
+
                 <div className="border-t pt-4">
                     <div className="flex justify-between mb-4">
-                        <div>
-                            <span className="text-sm text-slate-600">Delta:</span>
-                            <span className="ml-2 font-semibold">{totals.delta.toFixed(2)}</span>
-                        </div>
                         <div>
                             <span className="text-sm text-slate-600">P&L:</span>
                             <span
