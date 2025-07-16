@@ -14,23 +14,14 @@ interface LayoutParams {
     time: string;
 }
 
-interface Meta {
-    dayOpen: number,
-    spot: number,
-    atm_iv: number,
-    fut_price: number
-}
-
-
 export function ResizableLayout({ date, time }: LayoutParams) {
-    const [meta, setMeta] = useState<Meta>();
+    const [meta, setMeta] = useState<number>(0);
     const [positions, setPositions] = useState<PositionRow[]>([]);
     const [selectedExpiry, setExpiry] = useState<string>();
 
     useEffect(() => {
-        const updatePositions = async () => {
-            if (!positions.length) return;
 
+        const updatePositions = async () => {
             const formatDateForAPI = (date: Date) => {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -39,10 +30,12 @@ export function ResizableLayout({ date, time }: LayoutParams) {
             };
 
             const res = await fetch(
-                `${baseURL}/option-chains?date=${formatDateForAPI(date)}&time=${time}&expiry=${positions[0]?.expiry}`
+                `${baseURL}/option-chains?date=${formatDateForAPI(date)}&time=${time}&expiry=${selectedExpiry}`
             );
             const data = await res.json();
-            setMeta(data.meta);
+
+            setMeta(data.meta.spot);
+            console.log(meta);
             if (!data.chain || !data.meta) return;
 
             setPositions(prev =>
@@ -144,7 +137,7 @@ export function ResizableLayout({ date, time }: LayoutParams) {
                 <ResizablePanel defaultSize={55} minSize={30}>
                     <ResizablePanelGroup direction="vertical">
                         <ResizablePanel defaultSize={35} minSize={20}>
-                            <PayoffChart positions={positions} spotPrice={meta?.spot ?? 0} />
+                            <PayoffChart positions={positions} spotPrice={meta} />
                         </ResizablePanel>
                         <ResizableHandle withHandle />
                         <ResizablePanel defaultSize={35} minSize={25}>

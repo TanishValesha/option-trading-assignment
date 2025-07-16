@@ -4,6 +4,7 @@ import { TrendingUp } from "lucide-react";
 import type { PositionRow } from "@/lib/PositionType";
 import { ChartComponent } from "./ChartComponent";
 
+
 interface PayoffChartProps {
     positions: PositionRow[];
     spotPrice: number;

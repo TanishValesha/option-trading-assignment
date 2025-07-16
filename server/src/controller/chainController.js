@@ -41,7 +41,7 @@ exports.getOptionChains = async (req, res) => {
     .eq('trade_date', date)
     .eq('snapshot_time', time)
     .eq('expiry_date', expiry)
-    .maybeSingle();              // safe when 0 rows
+    .maybeSingle();             
 
   if (error) {
     console.error('[supabase]', error);

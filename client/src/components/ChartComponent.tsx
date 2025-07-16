@@ -4,6 +4,10 @@ import HighchartsReact from 'highcharts-react-official';
 import { useMemo } from 'react';
 import type { PositionRow } from '@/lib/PositionType';
 
+// interface Meta {
+//     spot: number
+// }
+
 interface ChartComponentProps {
     positions: PositionRow[];
     spotPrice: number;
@@ -11,10 +15,12 @@ interface ChartComponentProps {
 }
 
 export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComponentProps) => {
+    console.log(spotPrice);
+
     const totalPayoffs = useMemo(() => {
-        const lowerBound = spotPrice - 3000;
-        const upperBound = spotPrice + 3000;
-        const steps = 200;
+        const lowerBound = spotPrice - 2000;
+        const upperBound = spotPrice + 2000;
+        const steps = 100;
 
         const payoffs: [number, number][] = [];
 
@@ -24,19 +30,19 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
 
             for (const pos of positions) {
                 const lots = Math.abs(pos.qty / lotSize);
-                const type = pos.type === 'call' ? 'CE' : 'PE';
+                const type = pos.type === 'call' ? 'Call' : 'Put';
                 const premium = pos.entry;
-                const positionType = pos.side; // 'BUY' or 'SELL'
+                const positionType = pos.side;
 
                 let singlePayoff = 0;
 
-                if (type === 'CE') {
+                if (type === 'Call') {
                     if (positionType === 'BUY') {
                         singlePayoff = Math.max(price - pos.strike, 0) - premium;
                     } else {
                         singlePayoff = premium - Math.max(price - pos.strike, 0);
                     }
-                } else if (type === 'PE') {
+                } else if (type === 'Put') {
                     if (positionType === 'BUY') {
                         singlePayoff = Math.max(pos.strike - price, 0) - premium;
                     } else {
@@ -110,8 +116,8 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
                 type: 'area',
                 name: 'Payoff',
                 data: totalPayoffs,
-                color: '#28a745',         // Green for profit
-                negativeColor: '#dc3545', // Red for loss
+                color: '#28a745',
+                negativeColor: '#dc3545',
                 threshold: 0,
                 marker: { enabled: false },
                 fillOpacity: 0.2,
