@@ -25,7 +25,7 @@ interface HeaderParams {
 
 
 export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setSelectedTime }: HeaderParams) {
-    const [times, setTimes] = useState([]);
+    const [times, setTimes] = useState<string[]>([]);
 
     const handlePrevDay = () => {
         const prevDate = new Date(selectedDate);
