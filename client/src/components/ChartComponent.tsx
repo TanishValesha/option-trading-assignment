@@ -18,9 +18,9 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
     console.log(spotPrice);
 
     const totalPayoffs = useMemo(() => {
-        const lowerBound = spotPrice - 2000;
-        const upperBound = spotPrice + 2000;
-        const steps = 100;
+        const lowerBound = spotPrice - 1500;
+        const upperBound = spotPrice + 1500;
+        const steps = 50;
 
         const payoffs: [number, number][] = [];
 
