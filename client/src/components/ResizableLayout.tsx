@@ -16,9 +16,9 @@ interface LayoutParams {
 }
 
 export function ResizableLayout({ date, time }: LayoutParams) {
-    const [meta, setMeta] = useState<number>(0);
+    const [meta,] = useState<number>(0);
     const [positions, setPositions] = useState<PositionRow[]>([]);
-    const [selectedExpiry, setExpiry] = useState<string>('2021-01-07');
+    const [selectedExpiry, setExpiry] = useState<string | undefined>('2021-01-07');
     const [bulkData, setBulkData] = useState<{ [date: string]: any }>();
     const [loading, setLoading] = useState(false);
 

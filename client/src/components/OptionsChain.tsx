@@ -36,7 +36,7 @@ export interface SnapshotMeta {
 
 
 export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpiry, setExpiry }: OptionParams) {
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading,] = useState<boolean>(false);
 
     const formatDateForAPI = (date: Date) => {
         const year = date.getFullYear();
