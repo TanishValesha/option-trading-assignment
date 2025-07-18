@@ -5,7 +5,7 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Loader } from "lucide-react";
 import { Label } from "./ui/label";
 import type { OptionSide } from "@/lib/PositionType";
-
+import type { BulkData } from "@/lib/BulkDataType";
 
 interface OptionParams {
     date: Date,
@@ -16,8 +16,8 @@ interface OptionParams {
         ltp: number,
         expiry: string) => void,
     selectedExpiry: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    bulkData: any;
+    bulkData: BulkData | undefined,
+    theme?: 'light' | 'dark',
     setExpiry: Dispatch<SetStateAction<string | undefined>>,
 }
 
@@ -34,9 +34,9 @@ export interface SnapshotMeta {
     fut_price: number;
 }
 
-
-export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpiry, setExpiry }: OptionParams) {
+export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpiry, setExpiry, theme }: OptionParams) {
     const [loading,] = useState<boolean>(false);
+    // const { theme } = useTheme();
 
     const formatDateForAPI = (date: Date) => {
         const year = date.getFullYear();
@@ -59,7 +59,6 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
 
         if (timeData[selectedExpiry]) {
             currentData = timeData[selectedExpiry];
-
         } else {
             currentData = null;
         }
@@ -79,7 +78,6 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
         }
     }, [bulkData, date, time]);
 
-
     const formatDate = (date: Date) => {
         return date.toLocaleDateString('en-US', {
             month: 'short',
@@ -88,87 +86,16 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
         });
     };
 
-    // useEffect(() => {
-    //     const getExpiriesFunction = async () => {
-    //         setLoading(true);
-    //         try {
-    //             const formattedDate = formatDateForAPI(date);
-    //             const res = await fetch(`${baseURL}/expiry-dates?date=${formattedDate}`, {
-    //                 method: 'GET',
-    //                 headers: {
-    //                     'Content-Type': 'application/json'
-    //                 },
-    //             });
-    //             const data = await res.json();
-    //             if (res.status === 200) {
-    //                 setExpiryDates(data.data);
-    //                 setExpiry(data.data[0])
-    //             } else if (res.status === 500) {
-    //                 setExpiryDates([]);
-    //                 setExpiry('');
-    //             } else {
-    //                 setExpiry('');
-    //                 console.error('Unexpected response status:', res.status);
-    //             }
-
-    //         } catch (error) {
-    //             console.log('Error fetching times:', error);
-    //             setExpiryDates([]);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     }
-
-    //     getExpiriesFunction();
-
-    // }, [date])
-
-    // useEffect(() => {
-    //     const getOptionsFunction = async () => {
-    //         setLoading(true);
-    //         try {
-    //             const formattedDate = formatDateForAPI(date);
-    //             const res = await fetch(`${baseURL}/option-chains?date=${formattedDate}&time=${time}&expiry=${selectedExpiry}`, {
-    //                 method: 'GET',
-    //                 headers: {
-    //                     'Content-Type': 'application/json'
-    //                 },
-    //                 cache: 'no-cache'
-    //             });
-    //             const data = await res.json();
-    //             if (res.status === 200) {
-    //                 setOptionsData(data.chain);
-    //             } else if (res.status === 500) {
-    //                 setOptionsData([]);
-    //             } else {
-    //                 setOptionsData([]);
-    //                 console.error('Unexpected response status:', res.status);
-    //             }
-
-    //         } catch (error) {
-    //             console.log('Error fetching times:', error);
-    //             setOptionsData([]);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     }
-    //     if (selectedExpiry) getOptionsFunction();
-    // }, [date, time, selectedExpiry]);
-
-    // if (loading) {
-    //     <Card className="h-full">
-    //         <CardContent>
-    //             <div className="flex justify-center items-center h-full">
-    //                 <Loader className="w-6 h-6 animate-spin text-blue-600" />
-    //             </div>
-    //         </CardContent>
-    //     </Card>
-    // }
-
     return (
-        <Card className="h-full">
+        <Card className={`h-full transition-colors duration-300 ${theme === 'dark'
+            ? 'bg-gray-900 border-gray-700'
+            : 'bg-white border-gray-200'
+            }`}>
             <CardHeader className="">
-                <CardTitle className="text-xl text-left mt-1">Option Chain</CardTitle>
+                <CardTitle className={`text-xl text-left mt-1 ${theme === 'light' ? 'text-white' : 'text-gray-900'
+                    }`}>
+                    Option Chain
+                </CardTitle>
                 <div className="flex w-full items-center justify-center gap-3">
                     {expiryDates && expiryDates.map(exp => {
                         const isActive = exp === selectedExpiry;
@@ -176,9 +103,14 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                             <Button
                                 key={exp}
                                 variant={isActive ? 'default' : 'outline'}
-                                className={`text-sm px-4 py-1 transition
-                      ${isActive ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                className={`text-sm px-4 py-1 transition ${isActive
+                                    ? theme === 'dark'
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    : theme === 'dark'
+                                        ? 'bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700 hover:text-white'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                    }`}
                                 onClick={() => setExpiry(exp)}
                             >
                                 {formatDate(new Date(exp))}
@@ -188,15 +120,45 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                 </div>
             </CardHeader>
             <CardContent className="h-full overflow-hidden">
-                <div className="rounded-lg border bg-muted/20 h-full overflow-y-auto hide-scrollbar">
+                <div className={`rounded-lg border h-full overflow-y-auto hide-scrollbar ${theme === 'dark'
+                    ? 'bg-gray-800/50 border-gray-700'
+                    : 'bg-muted/20 border-gray-200'
+                    }`}>
                     <Table>
-                        <TableHeader className="sticky top-0 bg-white z-10">
-                            <TableRow className="border-b">
-                                <TableHead className="text-center bg-green-50 text-green-700 font-semibold w-1/5">Call LTP (Δ)</TableHead>
-                                <TableHead className="text-center bg-blue-50 text-blue-700 w-1/5">Call Actions</TableHead>
-                                <TableHead className="text-center bg-slate-100 font-bold w-1/5">Strike</TableHead>
-                                <TableHead className="text-center bg-blue-50 text-blue-700 w-1/5">Put Actions</TableHead>
-                                <TableHead className="text-center bg-red-50 text-red-700 font-semibold w-1/5">Put LTP (Δ)</TableHead>
+                        <TableHeader className={`sticky top-0 z-10 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'
+                            }`}>
+                            <TableRow className={`border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+                                }`}>
+                                <TableHead className={`text-center font-semibold w-1/5 ${theme === 'dark'
+                                    ? 'bg-green-900/30 text-green-300'
+                                    : 'bg-green-50 text-green-700'
+                                    }`}>
+                                    Call LTP (Δ)
+                                </TableHead>
+                                <TableHead className={`text-center w-1/5 ${theme === 'dark'
+                                    ? 'bg-blue-900/30 text-blue-300'
+                                    : 'bg-blue-50 text-blue-700'
+                                    }`}>
+                                    Call Actions
+                                </TableHead>
+                                <TableHead className={`text-center font-bold w-1/5 ${theme === 'dark'
+                                    ? 'bg-gray-700 text-gray-100'
+                                    : 'bg-slate-100 text-gray-900'
+                                    }`}>
+                                    Strike
+                                </TableHead>
+                                <TableHead className={`text-center w-1/5 ${theme === 'dark'
+                                    ? 'bg-blue-900/30 text-blue-300'
+                                    : 'bg-blue-50 text-blue-700'
+                                    }`}>
+                                    Put Actions
+                                </TableHead>
+                                <TableHead className={`text-center font-semibold w-1/5 ${theme === 'dark'
+                                    ? 'bg-red-900/30 text-red-300'
+                                    : 'bg-red-50 text-red-700'
+                                    }`}>
+                                    Put LTP (Δ)
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         {loading ? (
@@ -204,7 +166,8 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-8">
                                         <div className="flex justify-center items-center h-full">
-                                            <Loader className="w-6 h-6 animate-spin text-blue-600" />
+                                            <Loader className={`w-6 h-6 animate-spin ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                                                }`} />
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -214,7 +177,10 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-8">
                                         <div className="flex justify-center items-center h-full">
-                                            <Label className="text-gray-500">No Data Available</Label>
+                                            <Label className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                                                }`}>
+                                                No Data Available
+                                            </Label>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -224,50 +190,87 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                 {currentData.chain.map((row: { strike: number, call_ltp: number, put_ltp: number }) => (
                                     <TableRow
                                         key={row.strike}
-                                        className={`hover:bg-muted/50 py-4 transition-colors ${row.strike === 56700 ? 'bg-blue-50/50 border-blue-200' : ''
+                                        className={`py-4 transition-colors ${row.strike === 56700
+                                            ? theme === 'dark'
+                                                ? 'bg-blue-900/20 border-blue-700'
+                                                : 'bg-blue-50/50 border-blue-200'
+                                            : theme === 'dark'
+                                                ? 'hover:bg-gray-800/50'
+                                                : 'hover:bg-muted/50'
                                             }`}
                                     >
-                                        <TableCell className="text-center font-medium text-green-600 w-1/5">
+                                        <TableCell className={`text-center font-medium w-1/5 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                                            }`}>
                                             {row.call_ltp}
                                         </TableCell>
                                         <TableCell className="text-center w-1/5">
                                             <div className="flex gap-1 justify-center">
-                                                <Button onClick={() => {
-                                                    onAddPosition(row.strike, 'BUY', 'call', row.call_ltp, selectedExpiry!);
-
-
-                                                }
-                                                } size="sm" variant="outline" className="h-6 w-8 p-0 bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
+                                                <Button
+                                                    onClick={() => {
+                                                        onAddPosition(row.strike, 'BUY', 'call', row.call_ltp, selectedExpiry!);
+                                                    }}
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={`h-6 w-8 p-0 ${theme === 'dark'
+                                                        ? 'bg-green-900/30 hover:bg-green-900/50 text-green-300 border-green-700'
+                                                        : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+                                                        }`}
+                                                >
                                                     B
                                                 </Button>
-                                                <Button onClick={() => {
-                                                    onAddPosition(row.strike, 'SELL', 'call', row.call_ltp, selectedExpiry!);
-                                                }
-                                                } size="sm" variant="outline" className="h-6 w-8 p-0 bg-red-50 hover:bg-red-100 text-red-700 border-red-200">
+                                                <Button
+                                                    onClick={() => {
+                                                        onAddPosition(row.strike, 'SELL', 'call', row.call_ltp, selectedExpiry!);
+                                                    }}
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={`h-6 w-8 p-0 ${theme === 'dark'
+                                                        ? 'bg-red-900/30 hover:bg-red-900/50 text-red-300 border-red-700'
+                                                        : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
+                                                        }`}
+                                                >
                                                     S
                                                 </Button>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-center font-bold bg-slate-50 w-1/5">
+                                        <TableCell className={`text-center font-bold w-1/5 ${theme === 'dark'
+                                            ? 'bg-gray-800 text-gray-100'
+                                            : 'bg-slate-50 text-gray-900'
+                                            }`}>
                                             {row.strike.toLocaleString()}
                                         </TableCell>
                                         <TableCell className="text-center w-1/5">
                                             <div className="flex gap-1 justify-center">
-                                                <Button onClick={() => {
-                                                    onAddPosition(row.strike, 'BUY', 'put', row.put_ltp, selectedExpiry!);
-                                                }
-                                                } size="sm" variant="outline" className="h-6 w-8 p-0 bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
+                                                <Button
+                                                    onClick={() => {
+                                                        onAddPosition(row.strike, 'BUY', 'put', row.put_ltp, selectedExpiry!);
+                                                    }}
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={`h-6 w-8 p-0 ${theme === 'dark'
+                                                        ? 'bg-green-900/30 hover:bg-green-900/50 text-green-300 border-green-700'
+                                                        : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+                                                        }`}
+                                                >
                                                     B
                                                 </Button>
-                                                <Button onClick={() => {
-                                                    onAddPosition(row.strike, 'SELL', 'put', row.put_ltp, selectedExpiry!);
-                                                }
-                                                } size="sm" variant="outline" className="h-6 w-8 p-0 bg-red-50 hover:bg-red-100 text-red-700 border-red-200">
+                                                <Button
+                                                    onClick={() => {
+                                                        onAddPosition(row.strike, 'SELL', 'put', row.put_ltp, selectedExpiry!);
+                                                    }}
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={`h-6 w-8 p-0 ${theme === 'dark'
+                                                        ? 'bg-red-900/30 hover:bg-red-900/50 text-red-300 border-red-700'
+                                                        : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
+                                                        }`}
+                                                >
                                                     S
                                                 </Button>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-center font-medium text-red-600 w-1/5">
+                                        <TableCell className={`text-center font-medium w-1/5 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                                            }`}>
                                             {row.put_ltp}
                                         </TableCell>
                                     </TableRow>

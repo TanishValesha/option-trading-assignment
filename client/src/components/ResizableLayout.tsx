@@ -4,27 +4,40 @@ import {
 import { OptionsChain } from './OptionsChain';
 import { PayoffChart } from './PayoffChart';
 import { PositionsPanel } from './PositionsPanel';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import type { OptionSide, PositionRow } from '@/lib/PositionType';
 import { nanoid } from 'nanoid';
 import { baseURL } from '@/lib/baseURL';
 import { Loader } from 'lucide-react';
+import type { BulkData } from '@/lib/BulkDataType';
+
+interface Meta {
+    dayOpen: number;
+    spot: number;
+    atm_iv: number;
+    fut_price: number;
+}
+
 
 interface LayoutParams {
     date: Date;
     time: string;
+    meta: Meta;
+    setMeta: Dispatch<SetStateAction<Meta>>;
+    theme?: 'light' | 'dark';
 }
 
-export function ResizableLayout({ date, time }: LayoutParams) {
-    const [meta,] = useState<number>(0);
+
+
+export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutParams) {
     const [positions, setPositions] = useState<PositionRow[]>([]);
     const [selectedExpiry, setExpiry] = useState<string | undefined>('2021-01-07');
-    const [bulkData, setBulkData] = useState<{ [date: string]: any }>();
+    const [bulkData, setBulkData] = useState<BulkData | undefined>();
     const [loading, setLoading] = useState(false);
 
     const isWeekend = (date: Date) => {
         const day = date.getDay();
-        return day === 6 || day === 0; // Saturday or Sunday
+        return day === 6 || day === 0;
     };
 
 
@@ -49,7 +62,10 @@ export function ResizableLayout({ date, time }: LayoutParams) {
             try {
                 const res = await fetch(`${baseURL}/bulk?date=${selected}`);
                 const data = await res.json();
-                setBulkData(data);
+                setBulkData(prev => ({
+                    ...prev,
+                    ...data,
+                }));
 
             } catch (err) {
                 console.error(`Error fetching future date ${selected}`, err);
@@ -58,54 +74,64 @@ export function ResizableLayout({ date, time }: LayoutParams) {
             }
         };
 
+
+
         fetchAndStore();
+        // if (bulkData) {
+        //     const dayData = bulkData?.[formatDateForAPI(date)]?.[time]?.[selectedExpiry];
+        //     console.log(dayData);
+        //     setMeta(dayData?.meta?.spot ?? 0);
+        // }
+
     }, [date]);
 
+    useEffect(() => {
+        const updatePositionsFromBulkData = () => {
+            const formattedDate = formatDateForAPI(date);
+            let dayData;
+            if (selectedExpiry) {
+                dayData = bulkData?.[formattedDate]?.[time]?.[selectedExpiry];
+            }
 
+            if (!dayData || !dayData.chain || !dayData.meta) {
+                console.warn("No data found in bulkData for current date/time/expiry");
+                return;
+            }
+            setMeta(dayData.meta);
 
-    // useEffect(() => {
-    //     const updatePositions = async () => {
-    //         const res = await fetch(
-    //             `${baseURL}/option-chains?date=${formatDateForAPI(date)}&time=${time}&expiry=${selectedExpiry}`
-    //         );
-    //         const data = await res.json();
+            setPositions(prev =>
+                prev.map(pos => {
+                    const match = dayData.chain.find((opt: { strike: number, call_ltp: number, put_ltp: number }) => opt.strike === pos.strike);
+                    if (!match) return pos;
 
-    //         setMeta(data.meta.spot);
-    //         console.log(meta);
-    //         if (!data.chain || !data.meta) return;
+                    const latestLTP = pos.type === 'call' ? match.call_ltp : match.put_ltp;
+                    const optionSide = pos.side === 'BUY';
 
-    //         setPositions(prev =>
-    //             prev.map(pos => {
-    //                 const match = data.chain.find((opt: any) => opt.strike === pos.strike);
-    //                 if (!match) return pos;
+                    const entry = pos.entry;
+                    const qty = pos.qty;
 
-    //                 const latestLTP = pos.type === 'call' ? match.call_ltp : match.put_ltp;
-    //                 const optionSide = pos.side === 'BUY' ? true : false;
+                    const pnlAbs = optionSide
+                        ? (latestLTP - entry) * qty
+                        : (entry - latestLTP) * qty;
 
-    //                 const qty = pos.qty;
-    //                 const entry = pos.entry;
-    //                 let pnlAbs, pnlPct;
-    //                 if (optionSide) {
-    //                     pnlAbs = (latestLTP - entry) * qty;
-    //                     pnlPct = ((latestLTP - entry) / entry) * 100;
-    //                 } else {
-    //                     pnlAbs = (entry - latestLTP) * qty;
-    //                     pnlPct = ((entry - latestLTP) / entry) * 100;
-    //                 }
+                    const pnlPct = optionSide
+                        ? ((latestLTP - entry) / entry) * 100
+                        : ((entry - latestLTP) / entry) * 100;
 
-    //                 return {
-    //                     ...pos,
-    //                     ltp: latestLTP,
-    //                     pnlAbs: Number(pnlAbs.toFixed(2)),
-    //                     pnlPct: Number(pnlPct.toFixed(2)),
-    //                     delta: 0
-    //                 };
-    //             })
-    //         );
-    //     };
+                    return {
+                        ...pos,
+                        ltp: latestLTP,
+                        pnlAbs: Number(pnlAbs.toFixed(2)),
+                        pnlPct: Number(pnlPct.toFixed(2)),
+                        delta: 0
+                    };
+                })
+            );
+        };
 
-    //     updatePositions();
-    // }, [date, time, selectedExpiry]);
+        updatePositionsFromBulkData();
+    }, [date, time, selectedExpiry, bulkData]);
+
 
 
     const addPosition = (
@@ -164,12 +190,13 @@ export function ResizableLayout({ date, time }: LayoutParams) {
                             No Option Chain data available on weekends.
                         </div>) : loading ? (
                             <div className="flex justify-center items-center h-full">
-                                <Loader className="w-6 h-6 animate-spin text-blue-600" />
+                                <Loader className="w-6 h-6 animate-spin text-blue-600 dark:text-white" />
                             </div>
                         ) : (
                             <OptionsChain
                                 date={date}
                                 time={time}
+                                theme={theme}
                                 bulkData={bulkData}
                                 onAddPosition={addPosition}
                                 selectedExpiry={selectedExpiry!}
@@ -184,7 +211,7 @@ export function ResizableLayout({ date, time }: LayoutParams) {
                 <ResizablePanel defaultSize={55} minSize={30}>
                     <ResizablePanelGroup direction="vertical">
                         <ResizablePanel defaultSize={50} minSize={20}>
-                            <PayoffChart positions={positions} spotPrice={meta} />
+                            <PayoffChart positions={positions} spotPrice={meta.spot} />
                         </ResizablePanel>
                         <ResizableHandle withHandle />
                         <ResizablePanel defaultSize={35} minSize={25}>

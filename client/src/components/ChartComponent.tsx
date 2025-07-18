@@ -12,10 +12,13 @@ interface ChartComponentProps {
     positions: PositionRow[];
     spotPrice: number;
     lotSize?: number;
+    theme?: 'light' | 'dark';
 }
 
-export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComponentProps) => {
+export const ChartComponent = ({ positions, spotPrice, lotSize = 35, theme = 'light' }: ChartComponentProps) => {
     console.log(spotPrice);
+
+    const isDark = theme === 'dark';
 
     const totalPayoffs = useMemo(() => {
         const lowerBound = spotPrice - 1500;
@@ -62,29 +65,29 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
     const options: Highcharts.Options = {
         chart: {
             type: 'area',
-            backgroundColor: '#ffffff', // Light background
+            backgroundColor: isDark ? '#1f2937' : '#ffffff', // Dark: gray-800, Light: white
         },
         title: {
             text: 'Options Strategy Payoff Chart',
-            style: { color: '#000000' }, // Dark title
+            style: { color: isDark ? '#f3f4f6' : '#000000' }, // Dark: gray-100, Light: black
         },
         xAxis: {
             title: {
                 text: 'Underlying Price',
-                style: { color: '#333333' }, // Dark label
+                style: { color: isDark ? '#d1d5db' : '#333333' }, // Dark: gray-300, Light: dark gray
             },
-            labels: { style: { color: '#555555' } },
-            lineColor: '#cccccc',
-            tickColor: '#cccccc',
+            labels: { style: { color: isDark ? '#9ca3af' : '#555555' } }, // Dark: gray-400, Light: medium gray
+            lineColor: isDark ? '#4b5563' : '#cccccc', // Dark: gray-600, Light: light gray
+            tickColor: isDark ? '#4b5563' : '#cccccc', // Dark: gray-600, Light: light gray
             plotLines: [
                 {
                     value: spotPrice,
-                    color: '#000000', // Spot price line
+                    color: isDark ? '#f3f4f6' : '#000000', // Dark: gray-100, Light: black
                     dashStyle: 'ShortDash',
                     width: 2,
                     label: {
                         text: `Spot Price: ${spotPrice.toFixed(2)}`,
-                        style: { color: '#000000' },
+                        style: { color: isDark ? '#f3f4f6' : '#000000' },
                     },
                 },
             ],
@@ -92,23 +95,23 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
         yAxis: {
             title: {
                 text: 'Profit / Loss',
-                style: { color: '#333333' },
+                style: { color: isDark ? '#d1d5db' : '#333333' }, // Dark: gray-300, Light: dark gray
             },
-            labels: { style: { color: '#555555' } },
-            gridLineColor: '#e0e0e0',
+            labels: { style: { color: isDark ? '#9ca3af' : '#555555' } }, // Dark: gray-400, Light: medium gray
+            gridLineColor: isDark ? '#374151' : '#e0e0e0', // Dark: gray-700, Light: light gray
             plotLines: [
                 {
                     value: 0,
-                    color: '#888888', // Neutral zero line
+                    color: isDark ? '#6b7280' : '#888888', // Dark: gray-500, Light: medium gray
                     width: 2,
                     zIndex: 4,
                 },
             ],
         },
         tooltip: {
-            backgroundColor: '#ffffff',
-            style: { color: '#000000' },
-            borderColor: '#cccccc',
+            backgroundColor: isDark ? '#374151' : '#ffffff', // Dark: gray-700, Light: white
+            style: { color: isDark ? '#f3f4f6' : '#000000' }, // Dark: gray-100, Light: black
+            borderColor: isDark ? '#4b5563' : '#cccccc', // Dark: gray-600, Light: light gray
             pointFormat: 'Price: <b>{point.x:.2f}</b><br/>P&L: <b>{point.y:.2f}</b>',
         },
         series: [
@@ -116,8 +119,8 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
                 type: 'area',
                 name: 'Payoff',
                 data: totalPayoffs,
-                color: '#28a745',
-                negativeColor: '#dc3545',
+                color: isDark ? '#22c55e' : '#28a745', // Dark: green-500, Light: success green
+                negativeColor: isDark ? '#ef4444' : '#dc3545', // Dark: red-500, Light: danger red
                 threshold: 0,
                 marker: { enabled: false },
                 fillOpacity: 0.2,
@@ -126,7 +129,6 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35 }: ChartComp
         credits: { enabled: false },
         legend: { enabled: false },
     };
-
 
     return <HighchartsReact highcharts={Highcharts} options={options} />;
 };
