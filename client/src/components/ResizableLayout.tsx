@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid';
 import { baseURL } from '@/lib/baseURL';
 import { Loader } from 'lucide-react';
 import type { BulkData } from '@/lib/BulkDataType';
+import { supabase } from '@/lib/supabase';
 
 interface Meta {
     dayOpen: number;
@@ -48,6 +49,13 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
         return `${year}-${month}-${day}`;
     };
 
+    const authToken = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        return session?.access_token;
+    }
+
+
+
     useEffect(() => {
         console.log("Cached");
         if (isWeekend(date) === 6) {
@@ -61,10 +69,15 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
         if (bulkData && bulkData[selected]) return;
 
         const fetchAndStore = async () => {
+
             setLoading(true);
             console.log("Trigerred");
             try {
-                const res = await fetch(`${baseURL}/bulk?date=${selected}`);
+                const res = await fetch(`${baseURL}/bulk?date=${selected}`, {
+                    headers: {
+                        'Authorization': `Bearer ${await authToken()}`
+                    }
+                });
                 const data = await res.json();
                 setBulkData(prev => ({
                     ...prev,
@@ -219,6 +232,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
                         <ResizableHandle withHandle />
                         <ResizablePanel defaultSize={45} minSize={25}>
                             <PositionsPanel
+                                date={date}
                                 positions={positions}
                                 setPositions={setPositions}
                             />

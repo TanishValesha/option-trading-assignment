@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useTheme } from "@/hooks/useTheme";
+import { supabase } from "@/lib/supabase";
 
 interface Meta {
     dayOpen: number;
@@ -79,6 +80,12 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
     };
 
 
+    const authToken = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        return session?.access_token;
+    }
+
+
     const handleFirstTS = () => {
         if (times.length > 0) setSelectedTime(times[0]);
     }
@@ -104,6 +111,8 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
         return `${year}-${month}-${day}`;
     };
 
+
+
     useEffect(() => {
         const getTimesFunction = async () => {
             try {
@@ -111,7 +120,8 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                 const res = await fetch(`${baseURL}/times?date=${formattedDate}`, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${await authToken()}`,
                     },
                 });
                 const data = await res.json();
@@ -194,6 +204,18 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                         <Clock className="w-3 h-3 mr-1" />
                         Live
                     </Badge>
+
+                    <Button
+                        variant="outline"
+                        onClick={() => { }}
+                        className={`${theme === 'dark'
+                            ? 'bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700 hover:text-white'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }`}
+                    >
+                        <span>Check HeatMap</span>
+                        <ChevronRight />
+                    </Button>
                 </div>
 
                 <div className="flex items-center justify-center gap-6">

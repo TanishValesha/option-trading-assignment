@@ -6,6 +6,7 @@ import { ThemeProvider } from "./hooks/useTheme";
 import Home from "./pages/Index";
 import { LoginPage } from "./components/AuthComponents/LoginPage";
 import { SignupPage } from "./components/AuthComponents/SignupPage";
+import { UserActivityHeatmap } from "./components/HeatMap";
 
 
 const App = () => (
@@ -17,6 +18,7 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<UserActivityHeatmap />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

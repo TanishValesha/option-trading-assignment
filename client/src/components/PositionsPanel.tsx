@@ -6,8 +6,10 @@ import clsx from 'clsx';
 import type { PositionRow } from '@/lib/PositionType';
 import type { SetStateAction } from 'react';
 import { useTheme } from '@/hooks/useTheme';
+import { supabase } from '@/lib/supabase';
 
 interface PositionParams {
+    date: Date;
     positions: PositionRow[];
     setPositions: React.Dispatch<SetStateAction<PositionRow[]>>;
 }
@@ -17,7 +19,7 @@ const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
 
 
-export function PositionsPanel({ positions, setPositions }: PositionParams) {
+export function PositionsPanel({ positions, setPositions, date }: PositionParams) {
 
     const totals = positions.reduce(
         (acc, p) => {
@@ -33,7 +35,53 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
     const deleteRow = (id: string) =>
         setPositions(prev => prev.filter(p => p.id !== id));
 
-    const clearAll = () => setPositions([]);
+    const authToken = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        return session?.access_token;
+    }
+
+
+
+    const saveClearAll = () => {
+        if (positions.length === 0) return;
+
+        const payload = positions.map(p => ({
+            ...p,
+            lotNo: p.lotNo,
+            qty: p.qty,
+            entry: p.entry.toFixed(2),
+            ltp: p.ltp.toFixed(2),
+            pnlAbs: p.pnlAbs.toFixed(2),
+            pnlPct: p.pnlPct.toFixed(2),
+            end_date: date,
+        }));
+
+        console.log(payload);
+
+
+        const savePositions = async () => {
+            fetch('http://localhost:3000/api/save/positions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${await authToken()}`,
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Positions saved:', data);
+                    setPositions([]);
+                })
+                .catch(error => {
+                    console.error('Error saving positions:', error);
+                });
+        }
+
+        savePositions();
+
+
+    }
 
     const updateQty = (id: string, change: number) => {
         setPositions(prev =>
@@ -201,17 +249,14 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
 
                     <Button
                         size="sm"
-                        variant="destructive"
                         className={clsx(
-                            isDark
-                                ? "bg-red-600 hover:bg-red-700 text-white border-red-600 disabled:bg-gray-600 disabled:text-gray-400 disabled:border-gray-600"
-                                : "bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-300 disabled:text-gray-500"
+
+                            "bg-blue-500 hover:bg-blue-700 hover:text-white text-white disabled:bg-gray-300 disabled:text-gray-500"
                         )}
-                        onClick={clearAll}
+                        onClick={saveClearAll}
                         disabled={!positions.length}
                     >
-                        <Trash2 className="w-3 h-3 mr-1" />
-                        Clear All
+                        Save and Clear All
                     </Button>
                 </div>
             </CardContent>

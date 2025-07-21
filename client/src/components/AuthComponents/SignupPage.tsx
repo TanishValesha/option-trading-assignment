@@ -6,64 +6,66 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { toast } from "sonner"
-// Assuming useToast and Toaster are properly set up if you want toasts
-// import { useToast } from '@/components/ui/use-toast';
-// import { supabase } from '../../lib/supabase'; // Adjust path as needed for your project
+import { toast } from "sonner" // Assuming sonner is installed and Toaster is rendered
+import { supabase } from '../../lib/supabase'; // Your frontend supabase client
 
 export function SignupPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [name, setName] = useState('');
-    // const { toast } = useToast(); // Initialize toast
+    const [name, setName] = useState(''); // State for the name input
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/api/user/register', {
+            const response = await fetch('http://localhost:3000/api/user/register', { // <--- IMPORTANT: Replace with your actual backend URL
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name, email, password })
+                body: JSON.stringify({ name, email, password }) // Send name along with email and password
             });
 
-            const data = await response.json();
+            const data = await response.json(); // Parse the JSON response from your backend
 
-            if (!response.ok) {
+            if (!response.ok) { // Check if the HTTP status code indicates an error (e.g., 400, 500)
                 console.error('Signup error from backend:', data.error || 'Unknown error');
-                toast.error(
-                    'Signup Failed'
-                );
+                toast.error(data.error || 'Signup Failed'); // Use data.error for specific message
             } else {
+                // IMPORTANT: If the backend returns a session (meaning email confirmation is OFF),
+                // tell the frontend Supabase client about it.
+                if (data.session && data.sessionStatus === 'active') {
+                    const { error: setSessionError } = await supabase.auth.setSession(data.session);
+                    if (setSessionError) {
+                        console.error('Error setting Supabase session on frontend:', setSessionError.message);
+                        toast.error('Signup successful, but session setup failed.');
+                        setLoading(false); // Stop loading before returning
+                        return; // Exit if session setup fails
+                    }
+                }
+
+                // Provide user feedback based on the session status returned from the backend
                 const message = data.sessionStatus === 'awaiting_email_confirmation'
                     ? 'Signup Successful! Please check your email to confirm your account.'
-                    : data.message || 'Signup Successful!';
+                    : data.message || 'Signup Successful!'; // Use backend message or default
 
-                toast.success(
-                    'Signup Successful'
+                toast.success(message);
 
-                );
-
-                // Optionally redirect after successful signup if session is active
+                // Redirect only if the session is active immediately after signup
                 if (data.sessionStatus === 'active') {
                     window.location.href = '/dashboard'; // Redirect on immediate login
                 } else {
-                    // If email confirmation is enabled, you might redirect to a 'check your email' page
-                    // or simply update UI to show a message without redirecting.
-                    console.log(message);
+                    // If email confirmation is required, redirect to login or show specific instructions
+                    window.location.href = '/login'; // Redirect to login, where they can try after confirming
                 }
             }
         } catch (networkError) {
             console.error('Network error during signup:', networkError);
-            toast.error(
-                'Signup Failed',
-            );
+            toast.error('Network error. Please try again.');
         } finally {
-            setLoading(false);
+            setLoading(false); // Always stop loading, regardless of success or failure
         }
     };
 
