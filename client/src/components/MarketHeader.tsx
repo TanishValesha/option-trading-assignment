@@ -202,7 +202,7 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                             }`}>
                             ATM IV
                         </div>
-                        <div className={`font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                        <div className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-black'
                             }`}>
                             {meta.atm_iv}
                         </div>
@@ -212,7 +212,7 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                             }`}>
                             Spot
                         </div>
-                        <div className={`font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                        <div className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-black'
                             }`}>
                             {meta.spot}
                         </div>
@@ -222,7 +222,7 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                             }`}>
                             Day Open
                         </div>
-                        <div className={`font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                        <div className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-black'
                             }`}>
                             {meta.dayOpen}
                         </div>
@@ -232,7 +232,7 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                             }`}>
                             Future Prices
                         </div>
-                        <div className={`font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                        <div className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-black'
                             }`}>
                             {meta.fut_price}
                         </div>

@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableHead, TableHeader, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Plus, Minus } from 'lucide-react';
 import clsx from 'clsx';
 import type { PositionRow } from '@/lib/PositionType';
 import type { SetStateAction } from 'react';
@@ -35,22 +35,50 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
 
     const clearAll = () => setPositions([]);
 
+    const updateQty = (id: string, change: number) => {
+        setPositions(prev =>
+            prev.map(p => {
+                if (p.id === id) {
+                    const newQty = Math.max(LOT_SIZE, p.qty + change * LOT_SIZE);
+                    let newPnlAbs = 0;
+                    let newPnlPct = 0;
+
+                    if (p.side === 'BUY') {
+                        newPnlAbs = (p.ltp - p.entry) * newQty;
+                    } else {
+                        newPnlAbs = (p.entry - p.ltp) * newQty;
+                    }
+
+                    // Ensure division by zero is handled if entry * newQty is 0
+                    newPnlPct = (p.entry * newQty) !== 0 ? (newPnlAbs / (p.entry * newQty)) * 100 : 0;
+
+                    return {
+                        ...p,
+                        qty: newQty,
+                        pnlAbs: newPnlAbs,
+                        pnlPct: newPnlPct
+                    };
+                }
+                return p;
+            })
+        );
+    };
+
     return (
         <Card className={clsx(
-            "h-full",
+            "h-full flex flex-col",
             isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
         )}>
-            <CardHeader className="pb-4">
+            <CardHeader className='-mt-2'>
                 <CardTitle className={clsx(
                     "text-lg font-medium",
                     isDark ? "text-gray-100" : "text-gray-900"
                 )}>Positions</CardTitle>
             </CardHeader>
-
-            <CardContent className="space-y-4">
-                <div className="overflow-x-auto">
+            <CardContent className="flex-grow flex flex-col overflow-hidden -mt-6">
+                <div className="flex-grow overflow-y-auto overflow-x-auto hide-scrollbar">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-inherit z-10 ">
                             <TableRow className={clsx(
                                 isDark ? "border-gray-700 hover:bg-gray-800" : "border-gray-200 hover:bg-gray-50"
                             )}>
@@ -59,7 +87,7 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
                                     'LTP', 'Delta', 'P&L', 'Lots', 'Actions'
                                 ].map(h => (
                                     <TableHead key={h} className={clsx(
-                                        "text-xs text-center font-medium",
+                                        "text-xs text-center font-medium min-w-[70px]",
                                         isDark ? "text-gray-300" : "text-gray-700"
                                     )}>{h}</TableHead>
                                 ))}
@@ -89,7 +117,33 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
                                         >
                                             ₹{p.pnlAbs.toFixed(2)} ({p.pnlPct.toFixed(1)}%)
                                         </TableCell>
-                                        <TableCell className={isDark ? "text-gray-200" : "text-gray-900"}>{p.qty / 35}</TableCell>
+                                        <TableCell className={clsx("flex items-center justify-center space-x-1", isDark ? "text-gray-200" : "text-gray-900")}>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => updateQty(p.id, -1)}
+                                                disabled={p.qty <= LOT_SIZE}
+                                                className={clsx(
+                                                    "h-6",
+                                                    isDark ? "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600" : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200",
+                                                    p.qty <= LOT_SIZE && (isDark ? "opacity-50 cursor-not-allowed" : "opacity-50 cursor-not-allowed")
+                                                )}
+                                            >
+                                                <Minus className="w-3 h-3" />
+                                            </Button>
+                                            <span>{p.qty / LOT_SIZE}</span>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => updateQty(p.id, 1)}
+                                                className={clsx(
+                                                    "h-6 px-1",
+                                                    isDark ? "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600" : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                                                )}
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                            </Button>
+                                        </TableCell>
                                         <TableCell>
                                             <Button
                                                 size="sm"
@@ -123,7 +177,7 @@ export function PositionsPanel({ positions, setPositions }: PositionParams) {
 
 
                 <div className={clsx(
-                    "border-t pt-4",
+                    "border-t pt-4 mt-auto", // `mt-auto` pushes it to the bottom of the flex container (CardContent)
                     isDark ? "border-gray-700" : "border-gray-200"
                 )}>
                     <div className="flex justify-between mb-4">

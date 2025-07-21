@@ -1,10 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+// import { Badge } from "@/components/ui/badge";
+import { Minus, Plus, TrendingUp } from "lucide-react";
 import clsx from 'clsx';
 import type { PositionRow } from "@/lib/PositionType";
 import { ChartComponent } from "./ChartComponent";
 import { useTheme } from "@/hooks/useTheme";
+import { Button } from "./ui/button";
+import { useState } from "react";
 
 
 interface PayoffChartProps {
@@ -16,19 +18,20 @@ interface PayoffChartProps {
 export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const [skips, setSkips] = useState(1000);
 
     return (
         <Card className={clsx(
             "h-full",
             isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
         )}>
-            <CardHeader className="pb-4">
+            <CardHeader>
                 <div className="flex items-center justify-between">
-                    <CardTitle className={clsx(
-                        "text-lg font-semibold",
-                        isDark ? "text-gray-100" : "text-gray-900"
-                    )}>Options Payoff Chart</CardTitle>
-                    <Badge
+                    <div className="flex items-center space-x-2">
+                        <Button variant="outline" onClick={() => setSkips(skips - 500)}><Plus /></Button>
+                        <Button variant="outline" onClick={() => setSkips(skips + 500)}><Minus /></Button>
+                    </div>
+                    {/* <Badge
                         variant="secondary"
                         className={clsx(
                             isDark
@@ -38,12 +41,12 @@ export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
                     >
                         <TrendingUp className="w-3 h-3 mr-1" />
                         Strategy Analysis
-                    </Badge>
+                    </Badge> */}
                 </div>
             </CardHeader>
             <CardContent>
                 {positions.length != 0 ? (
-                    <ChartComponent theme={theme} positions={positions} spotPrice={spotPrice} lotSize={35} />
+                    <ChartComponent theme={theme} positions={positions} spotPrice={spotPrice} lotSize={35} skips={skips} />
                 ) : (
                     <div className={clsx(
                         "h-[300px] rounded-lg border-2 border-dashed flex items-center justify-center",

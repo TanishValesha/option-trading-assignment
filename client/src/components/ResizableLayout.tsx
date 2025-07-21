@@ -37,7 +37,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
 
     const isWeekend = (date: Date) => {
         const day = date.getDay();
-        return day === 6 || day === 0;
+        return day;
     };
 
 
@@ -50,7 +50,11 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
 
     useEffect(() => {
         console.log("Cached");
-        if (isWeekend(date)) {
+        if (isWeekend(date) === 6) {
+            date.setDate(date.getDate() + 2);
+            return;
+        } else if (isWeekend(date) === 0) {
+            date.setDate(date.getDate() + 1);
             return;
         }
         const selected = formatDateForAPI(date);
@@ -186,9 +190,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
             <ResizablePanelGroup direction="horizontal" className="h-full">
                 <ResizablePanel defaultSize={45} minSize={35}>
                     <>
-                        {isWeekend(date) ? (<div className="flex justify-center items-center h-full">
-                            No Option Chain data available on weekends.
-                        </div>) : loading ? (
+                        {loading ? (
                             <div className="flex justify-center items-center h-full">
                                 <Loader className="w-6 h-6 animate-spin text-blue-600 dark:text-white" />
                             </div>
@@ -197,6 +199,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
                                 date={date}
                                 time={time}
                                 theme={theme}
+                                positions={positions}
                                 bulkData={bulkData}
                                 onAddPosition={addPosition}
                                 selectedExpiry={selectedExpiry!}
@@ -214,7 +217,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
                             <PayoffChart positions={positions} spotPrice={meta.spot} />
                         </ResizablePanel>
                         <ResizableHandle withHandle />
-                        <ResizablePanel defaultSize={35} minSize={25}>
+                        <ResizablePanel defaultSize={45} minSize={25}>
                             <PositionsPanel
                                 positions={positions}
                                 setPositions={setPositions}

@@ -13,17 +13,19 @@ interface ChartComponentProps {
     spotPrice: number;
     lotSize?: number;
     theme?: 'light' | 'dark';
+    skips: number;
 }
 
-export const ChartComponent = ({ positions, spotPrice, lotSize = 35, theme = 'light' }: ChartComponentProps) => {
-    console.log(spotPrice);
+export const ChartComponent = ({ positions, spotPrice, lotSize = 35, theme = 'light', skips }: ChartComponentProps) => {
+    // console.log(spotPrice);
+    console.log(skips);
 
     const isDark = theme === 'dark';
 
     const totalPayoffs = useMemo(() => {
-        const lowerBound = spotPrice - 1500;
-        const upperBound = spotPrice + 1500;
-        const steps = 50;
+        const lowerBound = spotPrice - skips;
+        const upperBound = spotPrice + skips;
+        const steps = 100;
 
         const payoffs: [number, number][] = [];
 
@@ -60,7 +62,7 @@ export const ChartComponent = ({ positions, spotPrice, lotSize = 35, theme = 'li
         }
 
         return payoffs;
-    }, [positions, spotPrice, lotSize]);
+    }, [positions, spotPrice, lotSize, skips]);
 
     const options: Highcharts.Options = {
         chart: {
