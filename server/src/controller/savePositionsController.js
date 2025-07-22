@@ -42,7 +42,8 @@ const savePositions = async (req, res) => {
     delta: pos.delta,
     "pnlAbs": pos.pnlAbs,
     "pnlPct": pos.pnlPct,
-    "end_date": pos.end_date, 
+    "end_date": pos.end_date,
+    selected: pos.selected,
   }));
 
   try {
@@ -70,4 +71,48 @@ const savePositions = async (req, res) => {
   }
 };
 
-module.exports = { savePositions };
+/**
+ * @function getPositions
+ * @description Retrieves positions for the authenticated user where 'selected' is true.
+ * @param {object} req - Express request object (expected: req.user from authMiddleware)
+ * @param {object} res - Express response object
+ */
+const getPositions = async (req, res) => {
+  // Ensure user is authenticated
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ error: "User not authenticated." });
+  }
+
+  const userId = req.user.id; // Get the authenticated user's ID
+  console.log(`Fetching positions for userId: ${userId} with selected: true`);
+
+  try {
+    const { data, error } = await supabase
+      .from('positions')
+      .select('*') // Select all columns
+      .eq('userId', userId) // Filter by authenticated user's ID
+      .eq('selected', true); // Filter where 'selected' column is true
+
+    if (error) {
+      console.error("Error fetching positions:", error.message);
+      return res.status(500).json({ error: "Failed to fetch positions: " + error.message });
+    }
+
+    if (!data || data.length === 0) {
+      console.log("No selected positions found for this user.");
+      return res.status(200).json({ message: "No selected positions found.", positions: [] });
+    }
+
+    res.status(200).json({
+      message: "Selected positions fetched successfully",
+      positions: data,
+    });
+
+  } catch (error) {
+    console.error("General error in getPositions:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+module.exports = { savePositions, getPositions };

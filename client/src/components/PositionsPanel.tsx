@@ -7,6 +7,7 @@ import type { PositionRow } from '@/lib/PositionType';
 import type { SetStateAction } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { supabase } from '@/lib/supabase';
+import { format } from 'date-fns'; // Import format from date-fns for YYYY-MM-DD string
 
 interface PositionParams {
     date: Date;
@@ -15,12 +16,12 @@ interface PositionParams {
 }
 
 const LOT_SIZE = 35;
+// Helper to format date for display (e.g., "22 Jul 25")
 const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
 
 
 export function PositionsPanel({ positions, setPositions, date }: PositionParams) {
-
     const totals = positions.reduce(
         (acc, p) => {
             acc.delta += p.delta * (p.qty / LOT_SIZE);
@@ -40,8 +41,6 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
         return session?.access_token;
     }
 
-
-
     const saveClearAll = () => {
         if (positions.length === 0) return;
 
@@ -49,38 +48,56 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
             ...p,
             lotNo: p.lotNo,
             qty: p.qty,
-            entry: p.entry.toFixed(2),
-            ltp: p.ltp.toFixed(2),
-            pnlAbs: p.pnlAbs.toFixed(2),
-            pnlPct: p.pnlPct.toFixed(2),
-            end_date: date,
+            entry: parseFloat(p.entry.toFixed(2)), // Ensure number, not string
+            ltp: parseFloat(p.ltp.toFixed(2)),     // Ensure number, not string
+            pnlAbs: parseFloat(p.pnlAbs.toFixed(2)), // Ensure number, not string
+            pnlPct: parseFloat(p.pnlPct.toFixed(2)), // Ensure number, not string
+            // IMPORTANT CHANGE HERE: Format the date prop to a 'YYYY-MM-DD' string
+            // This avoids timezone issues by sending a date-only representation.
+            end_date: format(date, 'yyyy-MM-dd'),
+            selected: true // Ensure 'selected' is included in payload
         }));
 
-        console.log(payload);
-
+        console.log("Payload being sent:", payload);
 
         const savePositions = async () => {
-            fetch('http://localhost:3000/api/save/positions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await authToken()}`,
-                },
-                body: JSON.stringify(payload)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Positions saved:', data);
-                    setPositions([]);
-                })
-                .catch(error => {
-                    console.error('Error saving positions:', error);
+            try {
+                const token = await authToken();
+                if (!token) {
+                    console.error('Authentication token not available.');
+                    // Optionally show a user-facing error or redirect to login
+                    return;
+                }
+
+                const response = await fetch('http://localhost:3000/api/positions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(payload)
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Positions saved:', data);
+                setPositions([]); // Clear positions on successful save
+
+            } catch (error) {
+                console.error('Error saving positions:', error);
+                // Handle user feedback for the error
+            }
         }
 
         savePositions();
+    }
 
-
+    const clearAll = () => {
+        setPositions([]);
     }
 
     const updateQty = (id: string, change: number) => {
@@ -246,18 +263,28 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
                             </span>
                         </div>
                     </div>
-
-                    <Button
-                        size="sm"
-                        className={clsx(
-
-                            "bg-blue-500 hover:bg-blue-700 hover:text-white text-white disabled:bg-gray-300 disabled:text-gray-500"
-                        )}
-                        onClick={saveClearAll}
-                        disabled={!positions.length}
-                    >
-                        Save and Clear All
-                    </Button>
+                    <div className='flex justify-baseline items-center gap-4'>
+                        <Button
+                            size="sm"
+                            className={clsx(
+                                "bg-blue-500 hover:bg-blue-700 hover:text-white text-white disabled:bg-gray-300 disabled:text-gray-500"
+                            )}
+                            onClick={clearAll}
+                            disabled={!positions.length}
+                        >
+                            Exit all
+                        </Button>
+                        <Button
+                            size="sm"
+                            className={clsx(
+                                "bg-blue-500 hover:bg-blue-700 hover:text-white text-white disabled:bg-gray-300 disabled:text-gray-500"
+                            )}
+                            onClick={saveClearAll}
+                            disabled={!positions.length}
+                        >
+                            Exit all and Save to Trade Logs
+                        </Button>
+                    </div>
                 </div>
             </CardContent>
         </Card>

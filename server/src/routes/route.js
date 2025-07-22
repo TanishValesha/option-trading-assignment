@@ -16,7 +16,9 @@ router.get('/bulk', authMiddleware, bulkData.getBulkData);
 router.post('/user/login', authController.loginUser);
 router.post('/user/register', authController.registerUser);
 router.get('/user/logout', authController.logoutUser);
-router.post('/save/positions', authMiddleware, savePositionsController.savePositions);
+router.post('/positions', authMiddleware, savePositionsController.savePositions);
+router.get('/positions', authMiddleware, savePositionsController.getPositions);
+
 
 
 

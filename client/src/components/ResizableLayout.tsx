@@ -36,9 +36,10 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
     const [bulkData, setBulkData] = useState<BulkData | undefined>();
     const [loading, setLoading] = useState(false);
 
+
     const isWeekend = (date: Date) => {
         const day = date.getDay();
-        return day;
+        return (day === 0 || day === 6) ? true : false;
     };
 
 
@@ -58,11 +59,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
 
     useEffect(() => {
         console.log("Cached");
-        if (isWeekend(date) === 6) {
-            date.setDate(date.getDate() + 2);
-            return;
-        } else if (isWeekend(date) === 0) {
-            date.setDate(date.getDate() + 1);
+        if (isWeekend(date)) {
             return;
         }
         const selected = formatDateForAPI(date);
@@ -203,6 +200,11 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
             <ResizablePanelGroup direction="horizontal" className="h-full">
                 <ResizablePanel defaultSize={45} minSize={35}>
                     <>
+                        {isWeekend(date) && (
+                            <div className="flex justify-center items-center h-full">
+                                <span className="text-gray-500 dark:text-gray-400">No trading on weekends</span>
+                            </div>
+                        )}
                         {loading ? (
                             <div className="flex justify-center items-center h-full">
                                 <Loader className="w-6 h-6 animate-spin text-blue-600 dark:text-white" />

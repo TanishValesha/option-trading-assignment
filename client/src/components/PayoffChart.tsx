@@ -7,6 +7,7 @@ import { ChartComponent } from "./ChartComponent";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "./ui/button";
 import { useState } from "react";
+import { Label } from "./ui/label";
 
 
 interface PayoffChartProps {
@@ -20,6 +21,25 @@ export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
     const isDark = theme === 'dark';
     const [skips, setSkips] = useState(1000);
 
+    const breakevens = [];
+    for (let i = 0; i < positions.length - 1; i++) {
+        const p1_price = positions[i].entry;
+        const p1_pnl = positions[i].pnlAbs;
+        const p2_price = positions[i + 1].entry;
+        const p2_pnl = positions[i + 1].pnlAbs;
+        if (Math.sign(p1_pnl) !== Math.sign(p2_pnl) || (p1_pnl === 0 && p2_pnl !== 0) || (p2_pnl === 0 && p1_pnl !== 0)) {
+            if ((p2_pnl - p1_pnl) === 0) continue; // Avoid division by zero for flat P&L
+            const breakeven = p1_price - p1_pnl * (p2_price - p1_price) / (p2_pnl - p1_pnl);
+            // Only add if it's within the range of the two points used for interpolation
+            if (breakeven >= Math.min(p1_price, p2_price) && breakeven <= Math.max(p1_price, p2_price)) {
+                breakevens.push(parseFloat(breakeven.toFixed(2)));
+            }
+        }
+    }
+    const uniqueBreakevens = [...new Set(breakevens)].sort((a, b) => a - b);
+    console.log(uniqueBreakevens);
+
+
     return (
         <Card className={clsx(
             "h-full",
@@ -28,9 +48,10 @@ export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                        <Button variant="outline" onClick={() => setSkips(skips - 500)}><Plus /></Button>
-                        <Button variant="outline" onClick={() => setSkips(skips + 500)}><Minus /></Button>
+                        <Button variant="outline" onClick={() => setSkips(skips - 100)}><Plus /></Button>
+                        <Button variant="outline" onClick={() => setSkips(skips + 100)}><Minus /></Button>
                     </div>
+                    <Label>Breakeven(s): {uniqueBreakevens.join(", ")}</Label>
                     {/* <Badge
                         variant="secondary"
                         className={clsx(

@@ -1,6 +1,5 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Clock, ChevronDown, CalendarIcon, ChevronRight, ChevronLeft, ChevronFirst, ChevronLast, Moon, Sun } from "lucide-react";
+import { TrendingUp, ChevronDown, CalendarIcon, ChevronRight, ChevronLeft, ChevronFirst, ChevronLast, Moon, Sun, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { baseURL } from "@/lib/baseURL";
 import {
@@ -17,6 +16,9 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 
 interface Meta {
     dayOpen: number;
@@ -31,11 +33,22 @@ interface HeaderParams {
     setSelectedDate: (d: Date) => void;
     setSelectedTime: (t: string) => void;
     meta: Meta;
+    isRecordingON?: boolean;
+    setIsRecordingON?: (isOn: boolean) => void;
 }
 
-export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setSelectedTime, meta }: HeaderParams) {
+export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setSelectedTime, meta, isRecordingON, setIsRecordingON }: HeaderParams) {
     const [times, setTimes] = useState<string[]>([]);
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+
+    const handleToggleChange = (checked: boolean) => {
+        if (setIsRecordingON) {
+            setIsRecordingON(checked);
+        }
+        console.log('Toggle is now:', checked ? 'ON' : 'OFF');
+        // You can perform other actions here based on the toggle state
+    };
 
     const handlePrevDay = () => {
         const prevDate = new Date(selectedDate);
@@ -196,26 +209,38 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                             `}
                         />
                     </button>
-
-                    <Badge variant="outline" className={`${theme === 'dark'
-                        ? 'bg-green-900/30 text-green-300 border-green-700'
-                        : 'bg-green-50 text-green-700 border-green-200'
-                        }`}>
-                        <Clock className="w-3 h-3 mr-1" />
-                        Live
-                    </Badge>
-
-                    <Button
-                        variant="outline"
-                        onClick={() => { }}
-                        className={`${theme === 'dark'
-                            ? 'bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700 hover:text-white'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                            }`}
+                    <button
+                        onClick={() => {
+                            navigate("/profile")
+                        }}
+                        className={`
+                            relative inline-flex items-center justify-center
+                            w-10 h-10 rounded-xl
+                            transition-all duration-300 ease-in-out
+                            ${theme === 'dark'
+                                ? 'bg-gray-800 hover:bg-gray-700 border-gray-600'
+                                : 'bg-white hover:bg-gray-50 border-gray-200'
+                            }
+                            border shadow-lg hover:shadow-xl
+                        `}
+                        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
                     >
-                        <span>Check HeatMap</span>
-                        <ChevronRight />
-                    </Button>
+                        <UserRound className="w-4 h-4" />
+
+                    </button>
+
+                    <div className="flex items-center space-x-2 rounded-md">
+                        {/* Label for accessibility */}
+                        <Label htmlFor="recording" className="text-md font-bold">Recording</Label>
+                        {/* Shadcn UI Switch component */}
+                        <Switch
+                            id="recording" // Must match Label's htmlFor for accessibility
+                            checked={isRecordingON} // Controls whether the switch is ON (true) or OFF (false)
+                            onCheckedChange={handleToggleChange} // Callback when the toggle state changes"
+                        />
+                    </div>
+
+
                 </div>
 
                 <div className="flex items-center justify-center gap-6">
@@ -226,7 +251,7 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                         </div>
                         <div className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-black'
                             }`}>
-                            {meta.atm_iv}
+                            {meta.atm_iv == 0 ? '-' : meta.atm_iv}
                         </div>
                     </div>
                     <div className="text-center">
@@ -236,7 +261,7 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                         </div>
                         <div className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-black'
                             }`}>
-                            {meta.spot}
+                            {meta.spot == 0 ? '-' : meta.spot}
                         </div>
                     </div>
                     <div className="text-center">
@@ -246,7 +271,7 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                         </div>
                         <div className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-black'
                             }`}>
-                            {meta.dayOpen}
+                            {meta.dayOpen == 0 ? '-' : meta.dayOpen}
                         </div>
                     </div>
                     <div className="text-center">
@@ -256,7 +281,7 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                         </div>
                         <div className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-black'
                             }`}>
-                            {meta.fut_price}
+                            {meta.fut_price == 0 ? '-' : meta.fut_price}
                         </div>
                     </div>
                 </div>

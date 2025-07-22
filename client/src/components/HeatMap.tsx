@@ -1,219 +1,399 @@
-// components/ui/UserActivityHeatmap.tsx
-'use client';
-
-import React from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import {
-    addDays,
     subDays,
     format,
     startOfMonth,
     endOfMonth,
     eachMonthOfInterval,
     isWithinInterval,
-    // These two are important to align each month's heatmap to start on a Sunday
-    // or the first day of the week, which CalendarHeatmap expects
     startOfWeek,
     endOfWeek,
+    startOfYear,
+    endOfYear,
+    addDays,
 } from 'date-fns';
-import 'react-calendar-heatmap/dist/styles.css'; // Keep default styles for structure
+import 'react-calendar-heatmap/dist/styles.css';
 
-// --- DEMO DATA (same as provided previously) ---
-const staticDemoHeatmapData = [
-    // Example data for late July 2024 (start of the year-long period)
-    { date: "2024-07-22", count: 0 },
-    { date: "2024-07-23", count: 1 },
-    { date: "2024-07-24", count: 3 },
-    { date: "2024-07-25", count: 7 },
-    { date: "2024-07-26", count: 12 },
-    { date: "2024-07-27", count: 2 },
-    { date: "2024-07-28", count: 0 },
 
-    // August 2024
-    { date: "2024-08-01", count: 5 },
-    { date: "2024-08-02", count: 10 },
-    { date: "2024-08-03", count: 1 },
-    { date: "2024-08-04", count: 0 },
-    { date: "2024-08-05", count: 8 },
-    { date: "2024-08-15", count: 15 }, // Example high day
-    { date: "2024-08-20", count: 6 },
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
+import { baseURL } from '@/lib/baseURL';
+import { supabase } from '@/lib/supabase';
+import { useTheme } from '@/hooks/useTheme';
 
-    // September 2024
-    { date: "2024-09-01", count: 0 },
-    { date: "2024-09-05", count: 9 },
-    { date: "2024-09-10", count: 4 },
-    { date: "2024-09-25", count: 11 },
 
-    // October 2024
-    { date: "2024-10-01", count: 2 },
-    { date: "2024-10-10", count: 6 },
-    { date: "2024-10-20", count: 3 },
-    { date: "2024-10-31", count: 10 },
-
-    // November 2024
-    { date: "2024-11-05", count: 8 },
-    { date: "2024-11-15", count: 13 },
-    { date: "2024-11-25", count: 5 },
-
-    // December 2024
-    { date: "2024-12-01", count: 0 },
-    { date: "2024-12-10", count: 7 },
-    { date: "2024-12-20", count: 10 },
-    { date: "2024-12-25", count: 2 }, // Holiday low
-    { date: "2024-12-31", count: 18 }, // End of year surge
-
-    // January 2025
-    { date: "2025-01-01", count: 0 },
-    { date: "2025-01-05", count: 4 },
-    { date: "2025-01-15", count: 9 },
-    { date: "2025-01-25", count: 6 },
-
-    // February 2025
-    { date: "2025-02-01", count: 1 },
-    { date: "2025-02-10", count: 3 },
-    { date: "2025-02-20", count: 7 },
-
-    // March 2025
-    { date: "2025-03-01", count: 5 },
-    { date: "2025-03-10", count: 11 },
-    { date: "2025-03-20", count: 16 },
-    { date: "2025-03-31", count: 8 },
-
-    // April 2025
-    { date: "2025-04-05", count: 2 },
-    { date: "2025-04-15", count: 6 },
-    { date: "2025-04-25", count: 9 },
-
-    // May 2025
-    { date: "2025-05-01", count: 1 },
-    { date: "2025-05-10", count: 4 },
-    { date: "2025-05-20", count: 7 },
-
-    // June 2025
-    { date: "2025-06-01", count: 3 },
-    { date: "2025-06-10", count: 8 },
-    { date: "2025-06-20", count: 12 },
-    { date: "2025-06-30", count: 5 },
-
-    // July 2025 (leading up to today)
-    { date: "2025-07-01", count: 4 },
-    { date: "2025-07-05", count: 7 },
-    { date: "2025-07-10", count: 10 },
-    { date: "2025-07-15", count: 14 },
-    { date: "2025-07-18", count: 9 },
-    { date: "2025-07-19", count: 6 },
-    { date: "2025-07-20", count: 3 },
-    { date: "2025-07-21", count: 1 },
-    { date: "2025-07-22", count: 5 }, // Today
-];
-// --- END DEMO DATA ---
-
+const staticDemoHeatmapData: { date: string, count: number }[] = [];
 
 interface HeatmapValue {
-    date: string; // YYYY-MM-DD format
+    date: string;
     count: number;
 }
 
-// No props needed as we're using static demo data
 export function UserActivityHeatmap() {
     const today = new Date();
-    const oneYearAgo = subDays(today, 365); // Roughly a year ago from today
-
-    // Define the date range for the heatmap, ensuring it spans a full year
-    const endDateForHeatmap = today;
-    const startDateForHeatmap = subDays(today, 365); // Go back exactly 365 days
-
-    // Generate an array of the first day of each month within the year-long interval
-    const monthsToDisplay = eachMonthOfInterval({
-        start: startOfMonth(startDateForHeatmap), // Start from the beginning of the first month in the range
-        end: endOfMonth(endDateForHeatmap),     // End at the end of the last month in the range
+    const currentYear = today.getFullYear();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    const DROPDOWN_START_YEAR = 2020;
+    // const [savedPositions, setSavedPositions] = useState<any[]>([]);
+    const [heatmapData, setHeatmapData] = useState<HeatmapValue[]>(staticDemoHeatmapData);
+    const [selectedYear, setSelectedYear] = useState<number>(2021);
+    const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string; visible: boolean }>({
+        x: 0,
+        y: 0,
+        content: '',
+        visible: false
     });
 
-    const relevantData = React.useMemo(() => {
-        return staticDemoHeatmapData.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate >= startDateForHeatmap && itemDate <= endDateForHeatmap;
+    const authToken = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        return session?.access_token;
+    }
+
+    const startDateForHeatmap = useMemo(() => {
+        if (selectedYear === currentYear) {
+            return subDays(today, 365);
+        }
+        return startOfYear(new Date(selectedYear, 0, 1));
+    }, [selectedYear, today, currentYear]);
+
+    const endDateForHeatmap = useMemo(() => {
+        if (selectedYear === currentYear) {
+            return today;
+        }
+        return endOfYear(new Date(selectedYear, 0, 1));
+    }, [selectedYear, today, currentYear]);
+
+    const monthsToDisplay = useMemo(() => {
+        return eachMonthOfInterval({
+            start: startOfMonth(startDateForHeatmap),
+            end: endOfMonth(endDateForHeatmap),
         });
-    }, [startDateForHeatmap, endDateForHeatmap]); // Re-filter only if the overall date range changes
+    }, [startDateForHeatmap, endDateForHeatmap]);
+
+    const relevantData = useMemo(() => {
+        const filteredData = heatmapData.filter(item => {
+            const itemDate = new Date(item.date);
+            return isWithinInterval(itemDate, { start: startDateForHeatmap, end: endDateForHeatmap });
+        });
+
+
+        const dateRange: HeatmapValue[] = [];
+        let currentDate = new Date(startDateForHeatmap);
+
+        while (currentDate <= endDateForHeatmap) {
+            const dateString = format(currentDate, 'yyyy-MM-dd');
+            const existingData = filteredData.find(item => item.date === dateString);
+
+            dateRange.push({
+                date: dateString,
+                count: existingData?.count || 0
+            });
+
+            currentDate = addDays(currentDate, 1);
+        }
+
+        return dateRange;
+    }, [startDateForHeatmap, endDateForHeatmap]);
+
+    const availableYears = useMemo(() => {
+        const years: number[] = [];
+        for (let year = DROPDOWN_START_YEAR; year <= currentYear; year++) {
+            years.push(year);
+        }
+        return years.reverse();
+    }, [currentYear]);
+
+    useEffect(() => {
+        const getPositions = async () => {
+            console.log("Fetching positions...");
+            try {
+                const token = await authToken();
+                if (!token) {
+                    console.warn('Authentication token not available. Cannot fetch positions.');
+                    return;
+                }
+
+                const response = await fetch(`${baseURL}/positions`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Fetched raw positions data:', data.positions);
+
+
+                const aggregatedPnlByDate = new Map<string, number>();
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (data.positions || []).forEach((pos: any) => {
+                    const dateString = pos.end_date;
+                    const pnl = parseFloat(pos.pnlAbs);
+                    if (!isNaN(pnl)) {
+                        aggregatedPnlByDate.set(dateString, (aggregatedPnlByDate.get(dateString) || 0) + pnl);
+                    }
+                });
+
+                const newHeatmapData: HeatmapValue[] = Array.from(aggregatedPnlByDate.entries()).map(([date, count]) => ({
+                    date,
+                    count
+                }));
+
+
+                setHeatmapData(newHeatmapData);
+                console.log('Aggregated heatmapData set to state:', newHeatmapData);
+
+            } catch (error) {
+                console.error('Error fetching positions:', error);
+            }
+        }
+
+        getPositions();
+    }, []);
+
+    const handleMouseEnter = (event: React.MouseEvent, value: HeatmapValue | null) => {
+        const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+        if (!value || !value.date) {
+            setTooltip({
+                x: rect.left + rect.width / 2,
+                y: rect.top - 10,
+                content: 'No date information',
+                visible: true
+            });
+            return;
+        }
+
+        const date = new Date(value.date);
+        const dayName = format(date, 'EEEE');
+        const formattedDate = format(date, 'MMMM d, yyyy');
+        let activityText = '';
+        if (value.count > 0) {
+            activityText = `+${value.count}`;
+        } else if (value.count < 0) {
+            activityText = `${value.count}`;
+        }
+
+        setTooltip({
+            x: rect.left + rect.width / 2,
+            y: rect.top - 10,
+            content: `${dayName}, ${formattedDate} ${activityText}`,
+            visible: true
+        });
+    };
+
+    const handleMouseLeave = () => {
+        setTooltip(prev => ({ ...prev, visible: false }));
+    };
+
+
+    const legendColors = useMemo(() => {
+        if (isDark) {
+            return [
+                'bg-gray-800',      // No activity
+                'bg-green-700',     // Light positive
+                'bg-green-600',     // Medium positive
+                'bg-green-500',     // High positive
+                'bg-green-400'      // Very high positive
+            ];
+        } else {
+            return [
+                'bg-gray-200',      // No activity
+                'bg-green-200',     // Light positive
+                'bg-green-400',     // Medium positive
+                'bg-green-600',     // High positive
+                'bg-green-800'      // Very high positive
+            ];
+        }
+    }, [isDark]);
 
     return (
-        // Main container with dark theme, enabling horizontal scrolling if content overflows
-        <div className="bg-black p-6 rounded-lg shadow-lg border border-gray-800 text-white overflow-x-auto">
-            <h2 className="text-xl font-semibold mb-4 text-white">Your Activity Heatmap (Last Year - Demo)</h2>
-
-            {/* Outer container for the individual month heatmaps:
-          - flex: arranges items horizontally
-          - space-x-4: adds horizontal gaps between month blocks
-          - pb-4: adds padding-bottom for potential scrollbar */}
-            <div className="flex space-x-4 pb-4">
-                {monthsToDisplay.map((monthStart, index) => {
-                    const monthEndDate = endOfMonth(monthStart);
-                    const monthStartDate = startOfMonth(monthStart);
-
-                    // Filter data for the current month
-                    const monthData = relevantData.filter(item => {
-                        const itemDate = new Date(item.date);
-                        return isWithinInterval(itemDate, { start: monthStartDate, end: monthEndDate });
-                    });
-
-                    // CalendarHeatmap expects dates to be aligned to a week start/end (Sunday to Saturday).
-                    // We adjust the start/end dates for each month's heatmap to cover full weeks.
-                    const heatmapRenderStartDate = startOfWeek(monthStartDate, { weekStartsOn: 0 }); // Sunday is 0
-                    const heatmapRenderEndDate = endOfWeek(monthEndDate, { weekStartsOn: 0 });
-
-                    return (
-                        // flex-shrink-0: prevents the month blocks from shrinking to fit,
-                        // ensuring they maintain their size and trigger overflow-x-auto
-                        <div key={format(monthStart, 'yyyy-MM')} className="flex-shrink-0">
-                            {/* Month label above each heatmap block */}
-                            <h3 className="text-sm font-medium text-center mb-1 text-gray-300">
-                                {format(monthStart, 'MMM yyyy')}
-                            </h3>
-                            <CalendarHeatmap
-                                startDate={heatmapRenderStartDate} // Render just enough weeks for the month
-                                endDate={heatmapRenderEndDate}
-                                values={monthData} // Data for this specific month
-                                // Styles for cells based on activity count (dark theme)
-                                classForValue={(value: HeatmapValue | null) => {
-                                    if (!value || value.count === 0) {
-                                        return 'fill-gray-900'; // Very dark gray for empty/no data days
+        <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} p-6 w-screen min-h-screen rounded-lg shadow-lg border ${isDark ? 'border-gray-800' : 'border-gray-200'} ${isDark ? 'text-white' : 'text-gray-900'} overflow-x-auto relative`}>
+            <div className="flex flex-col min-h-screen justify-center items-center space-x-4">
+                <div className="flex justify-baseline items-center mb-4">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className={`flex items-center gap-1 ${isDark ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'}`}>
+                                {selectedYear === currentYear
+                                    ? `Last 365 Days (ending ${format(today, 'MMM d, yyyy')})`
+                                    : `${selectedYear}`
+                                }
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className={`w-56 ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
+                            <DropdownMenuLabel>Select Year</DropdownMenuLabel>
+                            {availableYears.map((year) => (
+                                <DropdownMenuItem
+                                    key={year}
+                                    onSelect={() => setSelectedYear(year)}
+                                    className={`cursor-pointer ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                                >
+                                    {year === currentYear
+                                        ? `Last 365 Days (ending ${format(today, 'MMM d, yyyy')})`
+                                        : `${year}`
                                     }
-                                    // Assign colors based on count (lighter/more vibrant for more activity)
-                                    if (value.count > 0 && value.count < 5) return 'fill-[#0e4429]'; // Dark green (low activity)
-                                    if (value.count >= 5 && value.count < 10) return 'fill-[#006d32]'; // Medium green
-                                    if (value.count >= 10 && value.count < 20) return 'fill-[#26a745]'; // Brighter green
-                                    return 'fill-[#39d353]'; // Lightest green (highest activity)
-                                }}
-                                tooltipDataAttrs={(value: HeatmapValue) => {
-                                    if (!value || !value.date) {
-                                        return { 'data-tip': 'No activity' };
-                                    }
-                                    const formattedDate = format(new Date(value.date), 'MMM d, yyyy');
-                                    return {
-                                        'data-tip': `${value.count || 0} activities on ${formattedDate}`,
-                                    };
-                                }}
-                                showWeekdayLabels={false} // No need for labels on individual month heatmaps
-                                showMonthLabels={false} // No need for labels on individual month heatmaps
-                                gutterSize={1} // Small gap between individual day cells
-                            />
-                        </div>
-                    );
-                })}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                <div className='flex space-x-4'>
+                    {monthsToDisplay.map((monthStart) => {
+                        const monthEndDate = endOfMonth(monthStart);
+                        const monthStartDate = startOfMonth(monthStart);
+
+                        const monthData = relevantData.filter(item => {
+                            const itemDate = new Date(item.date);
+                            return isWithinInterval(itemDate, { start: monthStartDate, end: monthEndDate });
+                        });
+
+
+                        const heatmapRenderStartDate = startOfWeek(monthStartDate, { weekStartsOn: 0 }); // Sunday is 0
+
+
+                        const heatmapRenderEndDate = endOfWeek(monthEndDate, { weekStartsOn: 0 });
+
+
+                        const extendedMonthData = [];
+                        let currentDate = new Date(heatmapRenderStartDate);
+
+                        while (currentDate <= heatmapRenderEndDate) {
+                            const dateString = format(currentDate, 'yyyy-MM-dd');
+                            const isInCurrentMonth = isWithinInterval(currentDate, { start: monthStartDate, end: monthEndDate });
+
+                            if (isInCurrentMonth) {
+
+                                const existingData = monthData.find(item => item.date === dateString);
+                                extendedMonthData.push({
+                                    date: dateString,
+                                    count: existingData?.count || 0
+                                });
+                            } else {
+
+                                extendedMonthData.push({
+                                    date: dateString,
+                                    count: -1
+                                });
+                            }
+
+                            currentDate = addDays(currentDate, 1);
+                        }
+
+                        return (
+                            <div key={format(monthStart, 'yyyy-MM')} className="flex-shrink-0 w-24">
+                                <h3 className={`text-md font-medium text-center mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    {format(monthStart, 'MMMMMM')}
+                                </h3>
+                                <CalendarHeatmap
+                                    startDate={heatmapRenderStartDate}
+                                    endDate={heatmapRenderEndDate}
+                                    values={extendedMonthData}
+                                    classForValue={(value) => {
+
+                                        if (!value || (value as HeatmapValue).count === -1) {
+                                            return 'fill-transparent';
+                                        }
+                                        const v = value as HeatmapValue;
+
+
+                                        if (v.count === 0) {
+                                            return isDark ? 'fill-gray-800' : 'fill-gray-200';
+                                        }
+
+
+                                        if (v.count > 0) {
+                                            if (v.count > 0 && v.count < 100) {
+
+                                                return isDark ? 'fill-green-700' : 'fill-green-200';
+                                            }
+                                            if (v.count >= 100 && v.count < 500) {
+
+                                                return isDark ? 'fill-green-600' : 'fill-green-400';
+                                            }
+
+                                            return isDark ? 'fill-green-500' : 'fill-green-600';
+                                        }
+
+
+                                        if (v.count < 0) {
+                                            if (v.count > -100) {
+
+                                                return isDark ? 'fill-red-700' : 'fill-red-200';
+                                            }
+                                            if (v.count <= -100 && v.count > -500) {
+
+                                                return isDark ? 'fill-red-600' : 'fill-red-400';
+                                            }
+
+                                            return isDark ? 'fill-red-500' : 'fill-red-600';
+                                        }
+
+
+                                        return isDark ? 'fill-gray-800' : 'fill-gray-200';
+                                    }}
+                                    onClick={(value) => {
+                                        const v = value as HeatmapValue | undefined;
+                                        if (v && v.date && v.count !== -1) {
+                                            console.log(`Clicked on ${v.date} with ${v.count} activities`);
+                                        }
+                                    }}
+                                    onMouseOver={(event, value) => {
+                                        const v = value as HeatmapValue | undefined;
+                                        if (v && v.count !== -1) {
+                                            handleMouseEnter(event as React.MouseEvent, v);
+                                        }
+                                    }}
+                                    onMouseLeave={handleMouseLeave}
+                                    showWeekdayLabels={false}
+                                    showMonthLabels={false}
+                                    gutterSize={1}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* Consolidated legend for the entire heatmap */}
-            <div className="flex justify-end mt-4 text-sm text-gray-400">
+            <div className={`flex justify-end mt-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 <span className="mr-2">Less</span>
                 <div className="flex space-x-1">
-                    <span className="w-4 h-4 rounded-sm bg-gray-900"></span> {/* Corresponds to color-scale-0/empty */}
-                    <span className="w-4 h-4 rounded-sm bg-[#0e4429]"></span> {/* Corresponds to color-scale-1 */}
-                    <span className="w-4 h-4 rounded-sm bg-[#006d32]"></span> {/* Corresponds to color-scale-2 */}
-                    <span className="w-4 h-4 rounded-sm bg-[#26a745]"></span> {/* Corresponds to color-scale-3 */}
-                    <span className="w-4 h-4 rounded-sm bg-[#39d353]"></span> {/* Corresponds to color-scale-4 */}
+                    {legendColors.map((color, index) => (
+                        <span key={index} className={`w-4 h-4 rounded-sm ${color}`}></span>
+                    ))}
                 </div>
                 <span className="ml-2">More</span>
             </div>
+
+            {/* Custom Tooltip */}
+            {tooltip.visible && (
+                <div
+                    className={`fixed z-50 px-2 py-1 text-xs ${isDark ? 'text-white bg-gray-900 border-gray-700' : 'text-gray-900 bg-white border-gray-300'} border rounded shadow-lg pointer-events-none whitespace-nowrap`}
+                    style={{
+                        left: `${tooltip.x}px`,
+                        top: `${tooltip.y}px`,
+                        transform: 'translateX(-50%) translateY(-100%)',
+                    }}
+                >
+                    {tooltip.content}
+                </div>
+            )}
         </div>
     );
 }
