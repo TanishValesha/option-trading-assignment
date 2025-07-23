@@ -1,7 +1,7 @@
 import { MarketHeader } from "@/components/MarketHeader";
 import { ResizableLayout } from "@/components/ResizableLayout";
 import { useTheme } from "@/hooks/useTheme";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Meta {
     dayOpen: number;
@@ -20,6 +20,9 @@ const Dashboard = () => {
         atm_iv: 0,
         fut_price: 0
     });
+    useEffect(() => {
+        document.title = 'Option Trading Platform'; // Set the document title
+    }, [])
     return (
         <div className={`min-h-screen w-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-slate-50'}`}>
             <MarketHeader meta={meta} selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedTime={selectedTime} setSelectedTime={setSelectedTime} />

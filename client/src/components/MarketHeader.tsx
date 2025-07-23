@@ -17,8 +17,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { Label } from "./ui/label";
-import { Switch } from "./ui/switch";
 
 interface Meta {
     dayOpen: number;
@@ -33,22 +31,12 @@ interface HeaderParams {
     setSelectedDate: (d: Date) => void;
     setSelectedTime: (t: string) => void;
     meta: Meta;
-    isRecordingON?: boolean;
-    setIsRecordingON?: (isOn: boolean) => void;
 }
 
-export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setSelectedTime, meta, isRecordingON, setIsRecordingON }: HeaderParams) {
+export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setSelectedTime, meta }: HeaderParams) {
     const [times, setTimes] = useState<string[]>([]);
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
-
-    const handleToggleChange = (checked: boolean) => {
-        if (setIsRecordingON) {
-            setIsRecordingON(checked);
-        }
-        console.log('Toggle is now:', checked ? 'ON' : 'OFF');
-        // You can perform other actions here based on the toggle state
-    };
 
     const handlePrevDay = () => {
         const prevDate = new Date(selectedDate);
@@ -228,17 +216,6 @@ export function MarketHeader({ selectedDate, selectedTime, setSelectedDate, setS
                         <UserRound className="w-4 h-4" />
 
                     </button>
-
-                    <div className="flex items-center space-x-2 rounded-md">
-                        {/* Label for accessibility */}
-                        <Label htmlFor="recording" className="text-md font-bold">Recording</Label>
-                        {/* Shadcn UI Switch component */}
-                        <Switch
-                            id="recording" // Must match Label's htmlFor for accessibility
-                            checked={isRecordingON} // Controls whether the switch is ON (true) or OFF (false)
-                            onCheckedChange={handleToggleChange} // Callback when the toggle state changes"
-                        />
-                    </div>
 
 
                 </div>
