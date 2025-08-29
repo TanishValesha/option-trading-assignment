@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner"; // Assuming sonner is installed and Toaster is rendered
 import { supabase } from '../../lib/supabase'; // Your frontend supabase client
+import { baseURL } from '@/lib/baseURL';
 
 export function LoginPage() {
     const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ export function LoginPage() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/api/user/login', { // YOUR BACKEND URL HERE
+            const response = await fetch(`${baseURL}/user/login`, { // YOUR BACKEND URL HERE
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -54,7 +55,7 @@ export function LoginPage() {
                 // Redirect to a protected route.
                 // Now that supabase.auth.setSession() has been called,
                 // supabase.auth.getSession() will correctly return the session.
-                window.location.href = '/dashboard';
+                window.location.href = '/';
             }
         } catch (networkError) {
             console.error('Network error during login:', networkError);

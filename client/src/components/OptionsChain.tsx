@@ -21,6 +21,7 @@ interface OptionParams {
     bulkData: BulkData | undefined,
     theme?: 'light' | 'dark',
     setExpiry: Dispatch<SetStateAction<string | undefined>>,
+    meta: SnapshotMeta | undefined
 }
 
 export interface ChainRow {
@@ -38,7 +39,7 @@ export interface SnapshotMeta {
 
 const LOT_SIZE = 35;
 
-export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpiry, setExpiry, theme, positions }: OptionParams) {
+export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpiry, setExpiry, theme, positions, meta }: OptionParams) {
     const [loading,] = useState<boolean>(false);
     console.log(positions);
 
@@ -90,9 +91,11 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
         });
     };
 
+    const nearest50multiple = Math.round((meta?.spot ?? 0) / 50) * 50;
+
     return (
         <Card className={`h-full transition-colors duration-300 ${theme === 'dark'
-            ? 'bg-gray-900 border-gray-700'
+            ? 'bg-black border-gray-700'
             : 'bg-white border-gray-200'
             }`}>
             <CardHeader>
@@ -103,9 +106,9 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                             <Button
                                 key={exp}
                                 variant={isActive ? 'default' : 'outline'}
-                                className={`text-sm px-4 py-1 transition ${isActive
+                                className={`text-sm px-4 py-1 transition hover:scale-105 hover:shadow-lg ${isActive
                                     ? theme === 'dark'
-                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                        ? 'bg-gray-800 text-white hover:bg-gray-900 hover:scale-105 hover:shadow-lg'
                                         : 'bg-blue-600 text-white hover:bg-blue-700'
                                     : theme === 'dark'
                                         ? 'bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700 hover:text-white'
@@ -121,7 +124,7 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
             </CardHeader>
             <CardContent className="h-full overflow-hidden">
                 <div className={`rounded-lg border h-full overflow-y-auto hide-scrollbar ${theme === 'dark'
-                    ? 'bg-gray-800/50 border-gray-700'
+                    ? 'bg-[#1F1F1F] border-gray-700'
                     : 'bg-muted/20 border-gray-200'
                     }`}>
                     <Table>
@@ -129,33 +132,33 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                             }`}>
                             <TableRow className={`border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
                                 }`}>
-                                <TableHead className={`text-center font-semibold w-1/5 ${theme === 'dark'
-                                    ? 'bg-green-900/30 text-green-300'
-                                    : 'bg-green-50 text-green-700'
+                                <TableHead className={`text-center w-1/5 ${theme === 'dark'
+                                    ? 'bg-[#1a1919] text-white'
+                                    : 'bg-blue-50 text-blue-700'
                                     }`}>
                                     Call LTP (Δ)
                                 </TableHead>
                                 <TableHead className={`text-center w-1/5 ${theme === 'dark'
-                                    ? 'bg-blue-900/30 text-blue-300'
+                                    ? 'bg-[#1a1919] text-white'
                                     : 'bg-blue-50 text-blue-700'
                                     }`}>
                                     Call Actions
                                 </TableHead>
                                 <TableHead className={`text-center font-bold w-1/5 ${theme === 'dark'
-                                    ? 'bg-gray-700 text-gray-100'
+                                    ? 'bg-[#1a1919] text-white'
                                     : 'bg-slate-100 text-gray-900'
                                     }`}>
                                     Strike
                                 </TableHead>
                                 <TableHead className={`text-center w-1/5 ${theme === 'dark'
-                                    ? 'bg-blue-900/30 text-blue-300'
+                                    ? 'bg-[#1a1919] text-white'
                                     : 'bg-blue-50 text-blue-700'
                                     }`}>
                                     Put Actions
                                 </TableHead>
-                                <TableHead className={`text-center font-semibold w-1/5 ${theme === 'dark'
-                                    ? 'bg-red-900/30 text-red-300'
-                                    : 'bg-red-50 text-red-700'
+                                <TableHead className={`text-center w-1/5 ${theme === 'dark'
+                                    ? 'bg-[#1a1919] text-white'
+                                    : 'bg-blue-50 text-blue-700'
                                     }`}>
                                     Put LTP (Δ)
                                 </TableHead>
@@ -212,16 +215,16 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                     return (
                                         <TableRow
                                             key={row.strike}
-                                            className={`py-4 transition-colors ${row.strike === 56700 // This is a hardcoded strike, consider making it dynamic
+                                            className={`py-4 transition-colors ${row.strike === nearest50multiple // This is a hardcoded strike, consider making it dynamic
                                                 ? theme === 'dark'
-                                                    ? 'bg-blue-900/20 border-blue-700'
-                                                    : 'bg-blue-50/50 border-blue-200'
+                                                    ? 'bg-gray-700/30 border-gray-700/30'
+                                                    : 'bg-blue-50/50 border-blue-400'
                                                 : theme === 'dark'
-                                                    ? 'hover:bg-gray-800/50'
+                                                    ? 'hover:bg-gray-700/20'
                                                     : 'hover:bg-muted/50'
                                                 }`}
                                         >
-                                            <TableCell className={`text-center font-medium w-1/5 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                                            <TableCell className={`text-center font-medium w-1/5 ${theme === 'dark' ? 'text-white' : 'text-black'
                                                 }`}>
                                                 {row.call_ltp}
                                                 {/* Add delta here if available in ChainRow, e.g., ({row.call_delta?.toFixed(2)}) */}
@@ -235,12 +238,10 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                                             }}
                                                             size="sm"
                                                             variant="outline"
-                                                            className={clsx(
-                                                                'h-6 w-8 p-0', // Fixed size for base button
-                                                                theme === 'dark'
-                                                                    ? 'bg-green-900/30 hover:bg-green-900/50 text-green-300 border-green-700'
-                                                                    : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
-                                                            )}
+                                                            className={`h-6 w-auto px-2 hover:scale-105 hover:shadow-lg ${theme === 'dark'
+                                                                ? '!bg-green-500 text-white border-green-700'
+                                                                : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+                                                                }`}
                                                         >
                                                             B
                                                         </Button>
@@ -249,7 +250,7 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                                                 className={clsx(
                                                                     "absolute -top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
                                                                     "flex items-center justify-center",
-                                                                    "w-4 h-4 text-[12px] font-bold rounded-full",
+                                                                    "w-4 h-4 text-[12px] font-bold rounded-full hover:scale-105 hover:shadow-lg",
                                                                     theme === 'dark'
                                                                         ? 'border-green-600 text-green-300'
                                                                         : 'border-green-600 text-green-500'
@@ -266,8 +267,8 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                                             }}
                                                             size="sm"
                                                             variant="outline"
-                                                            className={`h-6 w-auto px-2 ${theme === 'dark'
-                                                                ? 'bg-red-900/30 hover:bg-red-900/50 text-red-300 border-red-700'
+                                                            className={`h-6 w-auto px-2 hover:scale-105 hover:shadow-lg ${theme === 'dark'
+                                                                ? '!bg-orange-700 !hover:bg-red-900/50  text-white border-red-700'
                                                                 : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
                                                                 }`}
                                                         >
@@ -280,7 +281,7 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                                                     "flex items-center justify-center",
                                                                     "w-4 h-4 text-[12px] font-bold rounded-full",
                                                                     theme === 'dark'
-                                                                        ? 'border-red-600 text-red-300'
+                                                                        ? 'border-red-600 text-red-500'
                                                                         : 'border-red-600 text-red-500'
                                                                 )}
                                                             >
@@ -291,7 +292,7 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                                 </div>
                                             </TableCell>
                                             <TableCell className={`text-center font-bold w-1/5 ${theme === 'dark'
-                                                ? 'bg-gray-800 text-gray-100'
+                                                ? 'bg-[#1a1919] text-white'
                                                 : 'bg-slate-50 text-gray-900'
                                                 }`}>
                                                 {row.strike.toLocaleString()}
@@ -305,8 +306,8 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                                             }}
                                                             size="sm"
                                                             variant="outline"
-                                                            className={`h-6 w-auto px-2 ${theme === 'dark'
-                                                                ? 'bg-green-900/30 hover:bg-green-900/50 text-green-300 border-green-700'
+                                                            className={`h-6 w-auto px-2 hover:scale-105 hover:shadow-lg ${theme === 'dark'
+                                                                ? '!bg-green-500 text-white border-green-700'
                                                                 : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
                                                                 }`}
                                                         >
@@ -334,8 +335,8 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                                             }}
                                                             size="sm"
                                                             variant="outline"
-                                                            className={`h-6 w-auto px-2 ${theme === 'dark'
-                                                                ? 'bg-red-900/30 hover:bg-red-900/50 text-red-300 border-red-700'
+                                                            className={`h-6 w-auto px-2 hover:scale-105 hover:shadow-lg ${theme === 'dark'
+                                                                ? '!bg-orange-700 !hover:bg-red-900/50  text-white border-red-700'
                                                                 : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
                                                                 }`}
                                                         >
@@ -358,7 +359,7 @@ export function OptionsChain({ date, time, onAddPosition, bulkData, selectedExpi
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className={`text-center font-medium w-1/5 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                                            <TableCell className={`text-center font-medium w-1/5 ${theme === 'dark' ? 'text-white' : 'text-black'
                                                 }`}>
                                                 {row.put_ltp}
                                             </TableCell>

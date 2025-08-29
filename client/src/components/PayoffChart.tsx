@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Minus, Plus, TrendingUp } from "lucide-react";
 import clsx from 'clsx';
 import type { PositionRow } from "@/lib/PositionType";
-import { ChartComponent } from "./ChartComponent";
+// import { ChartComponent } from "./ChartComponent";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import { Label } from "./ui/label";
+import ChartComponent from "./ChartComponent";
 
 
 interface PayoffChartProps {
@@ -17,9 +18,11 @@ interface PayoffChartProps {
 }
 
 export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
+    console.log("Rendering PayoffChart with positions:", positions);
+
     const { theme } = useTheme();
     const isDark = theme === 'dark';
-    const [skips, setSkips] = useState(1000);
+    const [skips, setSkips] = useState(1300);
 
     const breakevens = [];
     for (let i = 0; i < positions.length - 1; i++) {
@@ -43,13 +46,13 @@ export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
     return (
         <Card className={clsx(
             "h-full",
-            isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
+            isDark ? "bg-black border-black" : "bg-white border-gray-200"
         )}>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                        <Button variant="outline" onClick={() => setSkips(skips - 100)}><Plus /></Button>
-                        <Button variant="outline" onClick={() => setSkips(skips + 100)}><Minus /></Button>
+                        <Button variant="outline" className="!bg-[#1F1F1F]" onClick={() => setSkips(skips - 100)}><Plus /></Button>
+                        <Button variant="outline" className="!bg-[#1F1F1F]" onClick={() => setSkips(skips + 100)}><Minus /></Button>
                     </div>
                     <Label>Breakeven(s): {uniqueBreakevens.join(", ")}</Label>
                     {/* <Badge
@@ -67,12 +70,13 @@ export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
             </CardHeader>
             <CardContent>
                 {positions.length != 0 ? (
-                    <ChartComponent theme={theme} positions={positions} spotPrice={spotPrice} lotSize={35} skips={skips} />
+                    // <ChartComponent theme={theme} positions={positions} spotPrice={spotPrice} lotSize={35} skips={skips} />
+                    <ChartComponent positions={positions} spotPrice={spotPrice} />
                 ) : (
                     <div className={clsx(
                         "h-[300px] rounded-lg border-2 border-dashed flex items-center justify-center",
                         isDark
-                            ? "bg-gray-800 border-gray-600"
+                            ? "bg-[#1F1F1F] border-gray-600"
                             : "bg-slate-50 border-slate-200"
                     )}>
                         <div className="text-center">
@@ -86,7 +90,7 @@ export function PayoffChart({ positions, spotPrice }: PayoffChartProps) {
                             )}>Chart Visualization Area</p>
                             <p className={clsx(
                                 "text-sm",
-                                isDark ? "text-gray-400" : "text-slate-500"
+                                isDark ? "text-gray-300" : "text-slate-500"
                             )}>Interactive payoff diagram will be displayed here on adding positions</p>
                         </div>
                     </div>

@@ -32,6 +32,8 @@ const savePositions = async (req, res) => {
   const preparedPositions = positionsToSave.map(pos => ({
     "userId": userId,
     "lotNo": pos.lotNo,
+    start_date: pos.start_date,
+    start_time: pos.start_time,
     qty: pos.qty,
     strike: pos.strike,
     side: pos.side,

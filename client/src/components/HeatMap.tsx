@@ -224,12 +224,15 @@ export function UserActivityHeatmap() {
     }, [isDark]);
 
     return (
-        <div className={`${isDark ? 'bg-gray-900' : 'bg-white'} p-6 w-screen min-h-screen rounded-lg shadow-lg border ${isDark ? 'border-gray-800' : 'border-gray-200'} ${isDark ? 'text-white' : 'text-gray-900'} overflow-x-auto relative`}>
-            <div className="flex flex-col min-h-screen justify-center items-center space-x-4">
+        <div className={`${isDark ? 'bg-black' : 'bg-white'} px-6 w-screen min-h-screen rounded-lg shadow-lg border ${isDark ? 'border-gray-800' : 'border-gray-200'} ${isDark ? 'text-white' : 'text-gray-900'} overflow-x-auto relative`}>
+            <div>
+                <p className='text-9xl font-[5rem] text-center mt-42'>Performance</p>
+            </div>
+            <div className="flex flex-col min-h-screen justify-center items-center space-x-4 -mt-40">
                 <div className="flex justify-baseline items-center mb-4">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className={`flex items-center gap-1 ${isDark ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'}`}>
+                            <Button variant="outline" className={`flex items-center gap-1 ${isDark ? 'bg-gray-800 hover:scale-105 hover:shadow-lg text-white border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'}`}>
                                 {selectedYear === currentYear
                                     ? `Last 365 Days (ending ${format(today, 'MMM d, yyyy')})`
                                     : `${selectedYear}`

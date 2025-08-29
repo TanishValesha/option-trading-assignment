@@ -8,6 +8,7 @@ import type { SetStateAction } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns'; // Import format from date-fns for YYYY-MM-DD string
+import { baseURL } from '@/lib/baseURL';
 
 interface PositionParams {
     date: Date;
@@ -69,7 +70,7 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
                     return;
                 }
 
-                const response = await fetch('http://localhost:3000/api/positions', {
+                const response = await fetch(`${baseURL}/positions`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -129,10 +130,13 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
         );
     };
 
+    console.log(positions);
+
+
     return (
         <Card className={clsx(
             "h-full flex flex-col",
-            isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
+            isDark ? "bg-black border-gray-800" : "bg-white border-gray-200"
         )}>
             <CardHeader className='-mt-2'>
                 <CardTitle className={clsx(
@@ -141,7 +145,7 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
                 )}>Positions</CardTitle>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col overflow-hidden -mt-6">
-                <div className="flex-grow overflow-y-auto overflow-x-auto hide-scrollbar">
+                <div className={clsx("flex-grow overflow-y-auto overflow-x-auto hide-scrollbar", isDark ? "bg-[#1F1F1F]" : "bg-[#FFFFFF]")}>
                     <Table>
                         <TableHeader className="sticky top-0 bg-inherit z-10 ">
                             <TableRow className={clsx(
@@ -189,7 +193,7 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
                                                 onClick={() => updateQty(p.id, -1)}
                                                 disabled={p.qty <= LOT_SIZE}
                                                 className={clsx(
-                                                    "h-6",
+                                                    "h-6 hover:scale-105 hover:shadow-lg",
                                                     isDark ? "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600" : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200",
                                                     p.qty <= LOT_SIZE && (isDark ? "opacity-50 cursor-not-allowed" : "opacity-50 cursor-not-allowed")
                                                 )}
@@ -202,7 +206,7 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
                                                 variant="outline"
                                                 onClick={() => updateQty(p.id, 1)}
                                                 className={clsx(
-                                                    "h-6 px-1",
+                                                    "h-6 px-1 hover:scale-105 hover:shadow-lg",
                                                     isDark ? "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600" : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                                                 )}
                                             >
@@ -214,7 +218,7 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
                                                 size="sm"
                                                 variant="destructive"
                                                 className={clsx(
-                                                    "h-6 px-2",
+                                                    "h-6 px-2 hover:scale-105 hover:shadow-lg",
                                                     isDark
                                                         ? "bg-red-600 hover:bg-red-700 text-white border-red-600"
                                                         : "bg-red-600 hover:bg-red-700 text-white"
@@ -267,7 +271,7 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
                         <Button
                             size="sm"
                             className={clsx(
-                                "bg-blue-500 hover:bg-blue-700 hover:text-white text-white disabled:bg-gray-300 disabled:text-gray-500"
+                                "bg-[#1F1F1F] hover:bg-[#1a1919] hover:text-white text-white disabled:bg-gray-300 disabled:text-gray-500 hover:scale-105 hover:shadow-lg"
                             )}
                             onClick={clearAll}
                             disabled={!positions.length}
@@ -277,7 +281,7 @@ export function PositionsPanel({ positions, setPositions, date }: PositionParams
                         <Button
                             size="sm"
                             className={clsx(
-                                "bg-blue-500 hover:bg-blue-700 hover:text-white text-white disabled:bg-gray-300 disabled:text-gray-500"
+                                "bg-[#1F1F1F] hover:bg-[#1a1919] hover:scale-105 hover:shadow-lg hover:text-white text-white disabled:bg-gray-300 disabled:text-gray-500"
                             )}
                             onClick={saveClearAll}
                             disabled={!positions.length}

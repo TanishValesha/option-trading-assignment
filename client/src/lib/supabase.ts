@@ -1,8 +1,8 @@
 // lib/supabase.ts (or .js)
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = "https://ayfbwhkpaatupngukbzl.supabase.co";
-const supabaseAnonKey ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZmJ3aGtwYWF0dXBuZ3VrYnpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1OTg3MjUsImV4cCI6MjA2ODE3NDcyNX0.TBmeuQAmjiKQIgr4Zh_BwjJAJbEtgYcJBl8LOK_8d78";
+const supabaseUrl = "https://ccjtuiqnthnftvmzxrud.supabase.co";
+const supabaseAnonKey ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjanR1aXFudGhuZnR2bXp4cnVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyODQ3MjYsImV4cCI6MjA3MTg2MDcyNn0.YL4cysGrsWqvLpTNH9Z2RM0Q_KoGrqGQaNok_OIX-z0";
 
 // Basic check (add more robust error handling in production)
 if (!supabaseUrl || !supabaseAnonKey) {

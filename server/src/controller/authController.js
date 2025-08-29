@@ -1,13 +1,6 @@
 // controllers/userController.js (Backend)
 const { supabase, supabaseAdmin } = require('../../lib/supabase');
 
-/**
- * @function registerUser
- * @description Handles user registration: signs up with Supabase Auth
- * and creates a corresponding profile in the public.users table.
- * @param {object} req - Express request object
- * @param {object} res - Express response object
- */
 const registerUser = async (req, res) => {
   const { email, password, name } = req.body;
 

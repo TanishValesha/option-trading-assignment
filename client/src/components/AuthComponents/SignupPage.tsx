@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner" // Assuming sonner is installed and Toaster is rendered
 import { supabase } from '../../lib/supabase'; // Your frontend supabase client
+import { baseURL } from '@/lib/baseURL';
 
 export function SignupPage() {
     const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ export function SignupPage() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/api/user/register', { // <--- IMPORTANT: Replace with your actual backend URL
+            const response = await fetch(`${baseURL}/user/register`, { // <--- IMPORTANT: Replace with your actual backend URL
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -55,7 +56,7 @@ export function SignupPage() {
 
                 // Redirect only if the session is active immediately after signup
                 if (data.sessionStatus === 'active') {
-                    window.location.href = '/dashboard'; // Redirect on immediate login
+                    window.location.href = '/'; // Redirect on immediate login
                 } else {
                     // If email confirmation is required, redirect to login or show specific instructions
                     window.location.href = '/login'; // Redirect to login, where they can try after confirming

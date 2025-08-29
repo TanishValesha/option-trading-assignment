@@ -3,7 +3,9 @@ import type { Config } from 'tailwindcss'
 
 const config: Config = {
   darkMode: 'class',
-  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/**/*.{js,ts,jsx,tsx}',
+    // Path for the stock-screener project (relative to where tailwind.config.ts is, typically 'client' folder)
+    '../../stock-screener/src/**/*.{js,ts,jsx,tsx}',],
   theme: { extend: {fontFamily: {
         // 'sans' is the default sans-serif stack. We'll extend it to include Poppins.
         // Poppins should be the first font in the array to be the primary font.

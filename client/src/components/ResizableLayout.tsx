@@ -26,11 +26,15 @@ interface LayoutParams {
     meta: Meta;
     setMeta: Dispatch<SetStateAction<Meta>>;
     theme?: 'light' | 'dark';
+    isDisable?: boolean;
+    setIsDisable?: Dispatch<SetStateAction<boolean>>;
 }
 
 
 
-export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutParams) {
+export function ResizableLayout({ date, time, setMeta, meta, theme, isDisable, setIsDisable }: LayoutParams) {
+    console.log("Time", time);
+
     const [positions, setPositions] = useState<PositionRow[]>([]);
     const [selectedExpiry, setExpiry] = useState<string | undefined>('2021-01-07');
     const [bulkData, setBulkData] = useState<BulkData | undefined>();
@@ -56,6 +60,22 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
     }
 
 
+    useEffect(() => {
+        positions.map(pos => {
+            console.log(formatDateForAPI(date));
+            if (pos.expiry == formatDateForAPI(date)) {
+                if (setIsDisable) setIsDisable(true);
+            } else {
+                if (setIsDisable) setIsDisable(false);
+            }
+        })
+
+        if (positions.length === 0) {
+            if (setIsDisable) setIsDisable(false);
+        }
+        console.log("isDisable changed:", isDisable);
+    }, [date, positions]);
+
 
     useEffect(() => {
         console.log("Cached");
@@ -76,10 +96,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
                     }
                 });
                 const data = await res.json();
-                setBulkData(prev => ({
-                    ...prev,
-                    ...data,
-                }));
+                setBulkData(data);
 
             } catch (err) {
                 console.error(`Error fetching future date ${selected}`, err);
@@ -112,9 +129,23 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
                 return;
             }
             setMeta(dayData.meta);
-
             setPositions(prev =>
                 prev.map(pos => {
+
+                    const formattedStartDate = formatDateForAPI(pos.start_date);
+
+                    console.log("Start Date: ", new Date(formattedStartDate));
+                    console.log("Current Date", new Date(date));
+
+
+                    if (new Date(formattedStartDate).getDate() > new Date(date).getDate()) {
+                        return pos;
+                    }
+
+                    if (time < pos.start_time) {
+                        return pos;
+                    }
+
                     const match = dayData.chain.find((opt: { strike: number, call_ltp: number, put_ltp: number }) => opt.strike === pos.strike);
                     if (!match) return pos;
 
@@ -148,6 +179,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
 
 
 
+
     const addPosition = (
         strike: number,
         side: OptionSide,
@@ -177,6 +209,8 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
             const newRow: PositionRow = {
                 id: nanoid(),
                 lotNo: prev.length + 1,
+                start_date: date,
+                start_time: time,
                 qty: lotQty,
                 strike,
                 side,
@@ -211,6 +245,7 @@ export function ResizableLayout({ date, time, setMeta, meta, theme }: LayoutPara
                             </div>
                         ) : (
                             <OptionsChain
+                                meta={meta}
                                 date={date}
                                 time={time}
                                 theme={theme}
