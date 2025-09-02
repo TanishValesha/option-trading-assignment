@@ -18,8 +18,6 @@ const getStockList = async (req, res) => {
 // ✅ Get stock data for a ticker within date range
 const getStockData = async (req, res) => {
   const { ticker } = req.params;
-  const start = "2023-01-01";
-  const end = "2025-08-31";
 
   try {
     const result = await pool.query(
@@ -27,10 +25,9 @@ const getStockData = async (req, res) => {
       SELECT *
       FROM stock_data
       WHERE ticker = $1
-      AND date BETWEEN $2 AND $3
       ORDER BY date ASC
       `,
-      [ticker, start, end]
+      [ticker]
     );
 
     res.json(result.rows);
