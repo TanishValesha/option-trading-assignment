@@ -113,7 +113,7 @@ const getWatchlist = async (req, res) => {
       .from('watchlist')
       .select('id, ticker, created_at')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) {
       return res.status(400).json({ error: error.message })
@@ -126,5 +126,34 @@ const getWatchlist = async (req, res) => {
   }
 }
 
+
+const getEachStockData = async (req, res) => {
+  try {
+    const { ticker } = req.params;
+
+    if (!ticker) {
+      return res.status(400).json({ error: "ticker is required" });
+    }
+
+    const query = `
+      SELECT adj_close, change_percent
+      FROM stock_data
+      WHERE ticker = $1
+      ORDER BY date DESC
+      LIMIT 1;
+    `;
+
+    const { rows } = await pool.query(query, [ticker]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "No record found for today" });
+    }
+
+    return res.status(200).json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
 
 module.exports = { addToWatchlist, getWatchlist, deleteFromWatchlist, getTodayStockData }
