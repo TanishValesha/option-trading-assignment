@@ -39,6 +39,8 @@ router.get('/watchlist/today/:ticker', authMiddleware, watchlistController.getTo
 router.get('/filterapp-data', authMiddleware, filterAppController.getFilterAppData);
 
 router.get('/clone-stock-data/:stock', cloneAppController.getStockData)
+router.get('/clone-stock-data', cloneAppController.getAllStocks)
+
 
 
 
