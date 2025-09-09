@@ -8,6 +8,8 @@ const savePositionsController = require('../controller/savePositionsController')
 const watchlistController = require('../controller/watchlistController');
 const { authMiddleware } = require('../middlewares/authMiddlewares');
 const { getStockList, getStockData } = require('../controller/stockController');
+const filterAppController = require('../controller/filterAppController');
+const cloneAppController = require('../controller/cloneAppController');
 
 
 // OLD ROUTES
@@ -32,6 +34,11 @@ router.get('/watchlist/get', authMiddleware, watchlistController.getWatchlist);
 router.post('/watchlist/add', authMiddleware, watchlistController.addToWatchlist);
 router.post('/watchlist/delete', authMiddleware, watchlistController.deleteFromWatchlist);
 router.get('/watchlist/today/:ticker', authMiddleware, watchlistController.getTodayStockData);
+
+// FILTER APP ROUTES
+router.get('/filterapp-data', authMiddleware, filterAppController.getFilterAppData);
+
+router.get('/clone-stock-data/:stock', cloneAppController.getStockData)
 
 
 
